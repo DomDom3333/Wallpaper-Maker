@@ -45,7 +45,7 @@ namespace WallpaperMaker.Classes
 
         internal ElementAgregator(string seed, Size targetRes)
         {
-            if(seed.Length < 27)
+            if(seed.Length != 27)
             {
                 return;
             }
@@ -151,7 +151,7 @@ namespace WallpaperMaker.Classes
             Circles = new List<Shape> { };
             int xRes = XResolution;
             int yRes = YResolution;
-            int size = RandomNumber(smallNumberScaler(maxSize.Width, xRes));
+            int size = RandomNumber(smallNumberScaler(maxSize.Width+1, xRes));
             int rotation = 0;
             Rectangle rec = new Rectangle(0, 0, xRes, yRes);
 

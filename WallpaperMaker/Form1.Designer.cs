@@ -175,6 +175,7 @@ namespace WallpaperMaker
             this.bt_Settings.TabIndex = 17;
             this.bt_Settings.Text = "Settings";
             this.bt_Settings.UseVisualStyleBackColor = true;
+            this.bt_Settings.Click += new System.EventHandler(this.bt_Settings_Click);
             // 
             // frm_Main
             // 
@@ -182,7 +183,7 @@ namespace WallpaperMaker
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(796, 450);
             this.Controls.Add(this.bt_Settings);
             this.Controls.Add(this.lbl_MultiSample);
             this.Controls.Add(this.cb_MSLevel);

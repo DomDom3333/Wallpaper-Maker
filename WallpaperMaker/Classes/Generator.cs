@@ -54,11 +54,17 @@ namespace WallpaperMaker.Classes
 
             return workingImage;
         }
+        ~Generator()
+        {
+            Maker = null;
+            workingImage.Dispose();
+            g.Dispose(); 
+        }
 
         private void GenerateShapes()
         {
             Size targetRes = new Size(xRes, yRes);
-            Maker = new ElementAgregator("330999996666001199999999999", targetRes);
+            Maker = new ElementAgregator(Properties.Settings.Default.Seed, targetRes);
             Maker.MakeAll();
         }
         private void DrawAll()

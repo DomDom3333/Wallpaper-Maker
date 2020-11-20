@@ -14,7 +14,6 @@ using WallpaperMaker.Properties;
 
 class Utils
 {
-    public string seed { get; set; }
     internal static int grabXRes()
     {
         Rectangle Monitor = Screen.PrimaryScreen.Bounds;
