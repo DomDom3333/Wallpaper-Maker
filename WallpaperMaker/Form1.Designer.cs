@@ -29,6 +29,7 @@ namespace WallpaperMaker
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frm_Main));
             this.bt_Exit = new System.Windows.Forms.Button();
             this.bt_SaveOutput = new System.Windows.Forms.Button();
             this.bt_Generate = new System.Windows.Forms.Button();
@@ -39,7 +40,6 @@ namespace WallpaperMaker
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.bt_AutoDetect = new System.Windows.Forms.Button();
-            this.bt_Resize = new System.Windows.Forms.Button();
             this.cb_MSLevel = new System.Windows.Forms.ComboBox();
             this.lbl_MultiSample = new System.Windows.Forms.Label();
             this.bt_Settings = new System.Windows.Forms.Button();
@@ -51,7 +51,7 @@ namespace WallpaperMaker
             // 
             // bt_Exit
             // 
-            this.bt_Exit.Location = new System.Drawing.Point(797, 12);
+            this.bt_Exit.Location = new System.Drawing.Point(797, 39);
             this.bt_Exit.Name = "bt_Exit";
             this.bt_Exit.Size = new System.Drawing.Size(75, 23);
             this.bt_Exit.TabIndex = 0;
@@ -135,26 +135,17 @@ namespace WallpaperMaker
             // 
             // bt_AutoDetect
             // 
-            this.bt_AutoDetect.Location = new System.Drawing.Point(575, 14);
+            this.bt_AutoDetect.Location = new System.Drawing.Point(575, 12);
             this.bt_AutoDetect.Name = "bt_AutoDetect";
-            this.bt_AutoDetect.Size = new System.Drawing.Size(75, 22);
+            this.bt_AutoDetect.Size = new System.Drawing.Size(75, 51);
             this.bt_AutoDetect.TabIndex = 13;
             this.bt_AutoDetect.Text = "Auto Detect";
             this.bt_AutoDetect.UseVisualStyleBackColor = true;
             this.bt_AutoDetect.Click += new System.EventHandler(this.bt_AutoDetect_Click);
             // 
-            // bt_Resize
-            // 
-            this.bt_Resize.Location = new System.Drawing.Point(575, 41);
-            this.bt_Resize.Name = "bt_Resize";
-            this.bt_Resize.Size = new System.Drawing.Size(75, 22);
-            this.bt_Resize.TabIndex = 14;
-            this.bt_Resize.Text = "Resize Window";
-            this.bt_Resize.UseVisualStyleBackColor = true;
-            this.bt_Resize.Click += new System.EventHandler(this.bt_Resize_Click);
-            // 
             // cb_MSLevel
             // 
+            this.cb_MSLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cb_MSLevel.FormattingEnabled = true;
             this.cb_MSLevel.Location = new System.Drawing.Point(656, 40);
             this.cb_MSLevel.Name = "cb_MSLevel";
@@ -223,7 +214,6 @@ namespace WallpaperMaker
             this.Controls.Add(this.bt_Settings);
             this.Controls.Add(this.lbl_MultiSample);
             this.Controls.Add(this.cb_MSLevel);
-            this.Controls.Add(this.bt_Resize);
             this.Controls.Add(this.bt_AutoDetect);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -235,6 +225,7 @@ namespace WallpaperMaker
             this.Controls.Add(this.bt_SaveOutput);
             this.Controls.Add(this.bt_Exit);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "frm_Main";
             this.Text = "WallpaperMaker";
@@ -257,7 +248,6 @@ namespace WallpaperMaker
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button bt_AutoDetect;
         private System.Windows.Forms.TextBox tb_yRes;
-        private System.Windows.Forms.Button bt_Resize;
         private System.Windows.Forms.ComboBox cb_MSLevel;
         private System.Windows.Forms.Label lbl_MultiSample;
         private System.Windows.Forms.Button bt_Settings;

@@ -42,8 +42,17 @@ namespace WallpaperMaker
         }
         private void bt_Generate_Click(object sender, EventArgs e)
         {
+            bt_Generate.Enabled = false;
             GC.Collect();//is stupid but needs to happen or it will swallow ALL Ram and slow down to hell
-            beginGeneratorAsync();
+            try
+            {
+                beginGeneratorAsync();
+            }
+            catch
+            {
+
+            }
+            bt_Generate.Enabled = true;
         }
         private void bt_Exit_Click(object sender, EventArgs e)
         {
@@ -56,11 +65,23 @@ namespace WallpaperMaker
         }
         private void tb_xRes_Leave(object sender, EventArgs e)
         {
+            if (!int.TryParse(tb_xRes.Text, out int parsedValue))
+            {
+                tb_xRes.Text = grabXRes().ToString();
+                MessageBox.Show("This is a number only field");
+                return;
+            }
             setPreviewSize();
             updateMSList();
         }
         private void tb_yRes_Leave(object sender, EventArgs e)
         {
+            if (!int.TryParse(tb_yRes.Text, out int parsedValue))
+            {
+                tb_yRes.Text = grabYRes().ToString();
+                MessageBox.Show("This is a number only field");
+                return;
+            }
             setPreviewSize();
             updateMSList();
         }

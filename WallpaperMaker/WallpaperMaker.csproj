@@ -13,6 +13,7 @@
     <AssemblyName>Wallpaper Maker</AssemblyName>
     <StartupObject>WallpaperMaker.Program</StartupObject>
     <SignAssembly>false</SignAssembly>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

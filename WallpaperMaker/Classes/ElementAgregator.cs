@@ -76,16 +76,52 @@ namespace WallpaperMaker.Classes
 
         internal void MakeAll()
         {
-            Task.Run(() => MakeRecs(smallNumberScaler(amoutRecs,maxNumberOfElements),sizeRecs)); //errors here since it calls random number with (9,9). Numbers need to be converted to % of screeen res of sort (scaled?)
-            Task.Run(() => MakeSquares(smallNumberScaler(amoutSquare,maxNumberOfElements), sizeSquare));
-            Task.Run(() => MakeElls(smallNumberScaler(amoutElls,maxNumberOfElements), sizeElls));
-            Task.Run(() => MakeCircs(smallNumberScaler(amoutCircs,maxNumberOfElements), sizeCircs));
+            List<Task> tasks = new List<Task> { };
 
-            Task.WhenAll();
+            tasks.Add(Task.Run(() => MakeSquares(smallNumberScaler(amoutSquare,maxNumberOfElements), sizeSquare)));
+            tasks.Add(Task.Run(() => MakeElls(smallNumberScaler(amoutElls,maxNumberOfElements), sizeElls)));
+            tasks.Add(Task.Run(() => MakeRecs(smallNumberScaler(amoutRecs,maxNumberOfElements),sizeRecs)));
+            tasks.Add(Task.Run(() => MakeCircs(smallNumberScaler(amoutCircs,maxNumberOfElements), sizeCircs)));
+
+            Task.WhenAll(tasks);
         }
-        internal void MakeSome(bool Rec, bool Ell, bool Cir, bool Tri, bool Pent, bool Hex, bool Och, bool Hour)
+        internal void MakeSome(bool[] toMake)
         {
-
+            List<Task> tasks = new List<Task> { };
+            for (int i = 0; i < toMake.Length; i++)
+            {
+                if(toMake[i] == true)
+                {
+                    switch (i)
+                    {
+                        case 1:
+                            tasks.Add(Task.Run(() => MakeRecs(smallNumberScaler(amoutRecs, maxNumberOfElements), sizeRecs)));
+                            break;
+                        case 2:
+                            tasks.Add(Task.Run(() => MakeSquares(smallNumberScaler(amoutSquare, maxNumberOfElements), sizeSquare)));
+                            break;
+                        case 3:
+                            tasks.Add(Task.Run(() => MakeElls(smallNumberScaler(amoutElls, maxNumberOfElements), sizeElls)));
+                            break;
+                        case 4:
+                            tasks.Add(Task.Run(() => MakeCircs(smallNumberScaler(amoutCircs, maxNumberOfElements), sizeCircs)));
+                            break;
+                        case 5:
+                            break;
+                        case 6:
+                            break;
+                        case 7:
+                            break;
+                        case 8:
+                            break;
+                        case 9:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            Task.WhenAll(tasks);
         }
 
 

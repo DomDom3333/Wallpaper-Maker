@@ -46,12 +46,8 @@ namespace WallpaperMaker.Classes
 
         internal Bitmap Generate()
         {
-
             GenerateShapes();
             DrawAll();
-
-
-
             return workingImage;
         }
         ~Generator()
@@ -63,9 +59,30 @@ namespace WallpaperMaker.Classes
 
         private void GenerateShapes()
         {
+            string seed = Properties.Settings.Default.Seed;
             Size targetRes = new Size(xRes, yRes);
-            Maker = new ElementAgregator(Properties.Settings.Default.Seed, targetRes);
-            Maker.MakeAll();
+            Maker = new ElementAgregator(seed, targetRes);
+            if (seed.Contains('0'))
+            {
+                bool[] boolList = new bool[9];
+                for (int i = 0; i < 9; i++)
+                {
+                    if (seed[i] == '0')
+                    {
+                        boolList[i] = false;
+                    }
+                    else
+                    {
+                        boolList[i] = true;
+                    }
+                }
+                Maker.MakeSome(boolList);
+            }
+            else
+            {
+                Maker.MakeAll();
+            }
+
         }
         private void DrawAll()
         {
@@ -74,45 +91,54 @@ namespace WallpaperMaker.Classes
             g.FillRectangle(mainBrush, rec);
 
             List<int> drawOrder = listOfRandomSequentialNumbers(5);
-
-            foreach (int turn in drawOrder)
+            try
             {
-                switch (turn)
+                foreach (int turn in drawOrder)
                 {
-                    case 1:
-                        foreach (Shape shapeToDraw in Maker.Rectangles)
-                        {
-                            mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                            DrawRec(shapeToDraw.Rectangles, mainBrush, shapeToDraw.rotation);
-                        }
-                        break;
-                    case 2:
-                        foreach (Shape shapeToDraw in Maker.Squares)
-                        {
-                            mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                            DrawSquares(shapeToDraw.Squares, mainBrush, shapeToDraw.rotation);
-                        }
-                        break;
-                    case 3:
-                        foreach (Shape shapeToDraw in Maker.Ellipsies)
-                        {
-                            mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                            DrawEllis(shapeToDraw.Ellipsies, mainBrush, shapeToDraw.rotation);
-                        }
-                        break;
-                    case 4:
-                        foreach (Shape shapeToDraw in Maker.Circles)
-                        {
-                            mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                            DrawCircles(shapeToDraw.Circles, mainBrush, shapeToDraw.rotation);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                    
-            }
+                    switch (turn)
+                    {
+                        case 1:
+                            if (Maker.Rectangles == null) break;
+                            foreach (Shape shapeToDraw in Maker.Rectangles)
+                            {
+                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
+                                DrawRec(shapeToDraw.Rectangles, mainBrush, shapeToDraw.rotation);
+                            }
+                            break;
+                        case 2:
+                            if (Maker.Squares == null) break;
+                            foreach (Shape shapeToDraw in Maker.Squares)
+                            {
+                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
+                                DrawSquares(shapeToDraw.Squares, mainBrush, shapeToDraw.rotation);
+                            }
+                            break;
+                        case 3:
+                            if (Maker.Ellipsies == null) break;
+                            foreach (Shape shapeToDraw in Maker.Ellipsies)
+                            {
+                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
+                                DrawEllis(shapeToDraw.Ellipsies, mainBrush, shapeToDraw.rotation);
+                            }
+                            break;
+                        case 4:
+                            if (Maker.Circles == null) break;
+                            foreach (Shape shapeToDraw in Maker.Circles)
+                            {
+                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
+                                DrawCircles(shapeToDraw.Circles, mainBrush, shapeToDraw.rotation);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
 
+                }
+            }
+            catch
+            {
+
+            }
             mainBrush.Dispose();
             g.Dispose();
             //run through lists of Maker to draw all elements. Each type in their own method
