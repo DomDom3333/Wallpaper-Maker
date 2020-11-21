@@ -94,17 +94,19 @@ namespace WallpaperMaker.Classes
                 {
                     switch (i)
                     {
-                        case 1:
+                        case 0:
                             tasks.Add(Task.Run(() => MakeRecs(smallNumberScaler(amoutRecs, maxNumberOfElements), sizeRecs)));
                             break;
-                        case 2:
+                        case 1:
                             tasks.Add(Task.Run(() => MakeSquares(smallNumberScaler(amoutSquare, maxNumberOfElements), sizeSquare)));
                             break;
-                        case 3:
+                        case 2:
                             tasks.Add(Task.Run(() => MakeElls(smallNumberScaler(amoutElls, maxNumberOfElements), sizeElls)));
                             break;
-                        case 4:
+                        case 3:
                             tasks.Add(Task.Run(() => MakeCircs(smallNumberScaler(amoutCircs, maxNumberOfElements), sizeCircs)));
+                            break;
+                        case 4:
                             break;
                         case 5:
                             break;
@@ -113,8 +115,6 @@ namespace WallpaperMaker.Classes
                         case 7:
                             break;
                         case 8:
-                            break;
-                        case 9:
                             break;
                         default:
                             break;
