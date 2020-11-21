@@ -11,7 +11,7 @@
     <Company />
     <NeutralLanguage>en</NeutralLanguage>
     <AssemblyName>Wallpaper Maker</AssemblyName>
-    <StartupObject>WallpaperMaker.Program</StartupObject>
+    <StartupObject>WallpaperMaker.WinForm.Program</StartupObject>
     <SignAssembly>false</SignAssembly>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -19,6 +19,10 @@
   <ItemGroup>
     <PackageReference Include="Json.Net" Version="1.0.23" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WallpaperMaker.Domain\WallpaperMaker.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

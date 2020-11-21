@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static Utils;
 
-namespace WallpaperMaker.Classes
+namespace WallpaperMaker.Domain
 {
-    class ElementAgregator
+    public class ElementAgregator
     {
         internal List<Shape> Rectangles { get; private set; }
         internal List<Shape> Squares { get; private set; }
@@ -38,9 +35,9 @@ namespace WallpaperMaker.Classes
         private Size sizeHexs { get;  set; }
         private Size sizeOchs { get;  set; }
         private Size sizeHours { get;  set; }
-
-        public int XResolution { get; set; } = grabXRes();
-        public int YResolution { get; set; } = grabYRes();
+        //TODO: Removed util call dependent on winForms Screen, might not use expected resolution values
+        public int XResolution { get; set; }
+        public int YResolution { get; set; }
         private int maxNumberOfElements { get; set; } = 50;
 
         internal ElementAgregator(string seed, Size targetRes)
@@ -71,20 +68,20 @@ namespace WallpaperMaker.Classes
 
             XResolution = targetRes.Width;
             YResolution = targetRes.Height;
-
         }
 
         internal void MakeAll()
         {
             List<Task> tasks = new List<Task> { };
 
-            tasks.Add(Task.Run(() => MakeSquares(smallNumberScaler(amoutSquare,maxNumberOfElements), sizeSquare)));
-            tasks.Add(Task.Run(() => MakeElls(smallNumberScaler(amoutElls,maxNumberOfElements), sizeElls)));
-            tasks.Add(Task.Run(() => MakeRecs(smallNumberScaler(amoutRecs,maxNumberOfElements),sizeRecs)));
-            tasks.Add(Task.Run(() => MakeCircs(smallNumberScaler(amoutCircs,maxNumberOfElements), sizeCircs)));
+            tasks.Add(Task.Run(() => MakeSquares(Utilities.smallNumberScaler(amoutSquare,maxNumberOfElements), sizeSquare)));
+            tasks.Add(Task.Run(() => MakeElls(Utilities.smallNumberScaler(amoutElls,maxNumberOfElements), sizeElls)));
+            tasks.Add(Task.Run(() => MakeRecs(Utilities.smallNumberScaler(amoutRecs,maxNumberOfElements),sizeRecs)));
+            tasks.Add(Task.Run(() => MakeCircs(Utilities.smallNumberScaler(amoutCircs,maxNumberOfElements), sizeCircs)));
 
             Task.WhenAll(tasks);
         }
+
         internal void MakeSome(bool[] toMake)
         {
             List<Task> tasks = new List<Task> { };
@@ -95,16 +92,16 @@ namespace WallpaperMaker.Classes
                     switch (i)
                     {
                         case 0:
-                            tasks.Add(Task.Run(() => MakeRecs(smallNumberScaler(amoutRecs, maxNumberOfElements), sizeRecs)));
+                            tasks.Add(Task.Run(() => MakeRecs(Utilities.smallNumberScaler(amoutRecs, maxNumberOfElements), sizeRecs)));
                             break;
                         case 1:
-                            tasks.Add(Task.Run(() => MakeSquares(smallNumberScaler(amoutSquare, maxNumberOfElements), sizeSquare)));
+                            tasks.Add(Task.Run(() => MakeSquares(Utilities.smallNumberScaler(amoutSquare, maxNumberOfElements), sizeSquare)));
                             break;
                         case 2:
-                            tasks.Add(Task.Run(() => MakeElls(smallNumberScaler(amoutElls, maxNumberOfElements), sizeElls)));
+                            tasks.Add(Task.Run(() => MakeElls(Utilities.smallNumberScaler(amoutElls, maxNumberOfElements), sizeElls)));
                             break;
                         case 3:
-                            tasks.Add(Task.Run(() => MakeCircs(smallNumberScaler(amoutCircs, maxNumberOfElements), sizeCircs)));
+                            tasks.Add(Task.Run(() => MakeCircs(Utilities.smallNumberScaler(amoutCircs, maxNumberOfElements), sizeCircs)));
                             break;
                         case 4:
                             break;
@@ -124,9 +121,6 @@ namespace WallpaperMaker.Classes
             Task.WhenAll(tasks);
         }
 
-
-
-
         private void MakeRecs(int amout, Size maxSize)//Sample Creating function
         {
             Rectangles = new List<Shape> { };
@@ -137,33 +131,35 @@ namespace WallpaperMaker.Classes
 
             for (int i = 0; i <= amout; i++)
             {
-                rotation = RandomNumber(90);
-                rec.X = RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = RandomNumber(yRes - (yRes / 10), yRes / 100);
-                rec.Width = RandomNumber(smallNumberScaler(maxSize.Width,xRes));
-                rec.Height = RandomNumber(smallNumberScaler(maxSize.Height, xRes));
+                rotation = Utilities.RandomNumber(90);
+                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
+                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
+                rec.Width = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width,xRes));
+                rec.Height = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Height, xRes));
                 Rectangles.Add(new Shape(rotation, "Rectangle", rec));
             }
         }
+
         private void MakeSquares(int amout, Size maxSize)
         {
             Squares = new List<Shape> { };
             int xRes = XResolution;
             int yRes = YResolution;
-            int size = RandomNumber(smallNumberScaler(maxSize.Width, xRes));
+            int size = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width, xRes));
             int rotation = 00;
             Rectangle rec = new Rectangle(0, 0, xRes, yRes);
 
             for (int i = 0; i <= amout; i++)
             {
-                rotation = RandomNumber(90);
-                rec.X = RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = RandomNumber(yRes - (yRes / 10), yRes / 100);
+                rotation = Utilities.RandomNumber(90);
+                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
+                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
                 rec.Width = size;
                 rec.Height = size;
                 Squares.Add(new Shape(rotation, "Square", rec));
             }
         }
+
         private void MakeElls(int amout, Size maxSize)
         {
             Ellipsies = new List<Shape> { };
@@ -174,52 +170,33 @@ namespace WallpaperMaker.Classes
 
             for (int i = 0; i <= amout; i++)
             {
-                rotation = RandomNumber(90);
-                rec.X = RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = RandomNumber(yRes - (yRes / 10), yRes / 100);
-                rec.Width = RandomNumber(smallNumberScaler(maxSize.Width, xRes));
-                rec.Height = RandomNumber(smallNumberScaler(maxSize.Height, xRes));
+                rotation = Utilities.RandomNumber(90);
+                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
+                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
+                rec.Width = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width, xRes));
+                rec.Height = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Height, xRes));
                 Ellipsies.Add(new Shape(rotation, "Ellipse", rec));
             }
         }
+
         private void MakeCircs(int amout, Size maxSize)
         {
             Circles = new List<Shape> { };
             int xRes = XResolution;
             int yRes = YResolution;
-            int size = RandomNumber(smallNumberScaler(maxSize.Width+1, xRes));
+            int size = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width+1, xRes));
             int rotation = 0;
             Rectangle rec = new Rectangle(0, 0, xRes, yRes);
 
             for (int i = 0; i <= amout; i++)
             {
-                rotation = RandomNumber(90);
-                rec.X = RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = RandomNumber(yRes - (yRes / 10), yRes / 100);
+                rotation = Utilities.RandomNumber(90);
+                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
+                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
                 rec.Width = size;
                 rec.Height = size;
                 Circles.Add(new Shape(rotation, "Circle", rec));
             }
-        }
-        private void MakeTris(int amout, Size maxSize)
-        {
-
-        }
-        private void MakePents(int amout, Size maxSize)
-        {
-
-        }
-        private void MakeHexs(int amout, Size maxSize)
-        {
-
-        }
-        private void MakeOchs(int amout, Size maxSize)
-        {
-
-        }
-        private void makeHours(int amout, Size maxSize)
-        {
-
-        }        
+        }       
     }
 }

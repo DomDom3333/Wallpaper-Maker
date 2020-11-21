@@ -1,5 +1,5 @@
 ﻿
-namespace WallpaperMaker
+namespace WallpaperMaker.WinForm
 {
     partial class ColorPicker
     {

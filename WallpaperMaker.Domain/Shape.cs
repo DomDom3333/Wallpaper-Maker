@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Drawing;
 
-namespace WallpaperMaker.Classes
+namespace WallpaperMaker.Domain
 {
-    class Shape
+    public class Shape
     {
         internal int xPos { get; private set; }
         internal int yPos { get; private set; }
@@ -72,6 +68,5 @@ namespace WallpaperMaker.Classes
                     break;
             }
         }
-
     }
 }

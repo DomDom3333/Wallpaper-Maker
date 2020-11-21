@@ -2,19 +2,15 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static Utils;
 
-namespace WallpaperMaker.Classes
+namespace WallpaperMaker.Domain
 {
-    class Pallet
+    public class Pallet
     {
-        internal string Name { get; private set; }
-        internal List<List<int>> Colors { get; private set; }
+        public string Name { get; private set; }
+        public List<List<int>> Colors { get; private set; }
 
-        internal Pallet(string newName, string[] colorList)
+        public Pallet(string newName, string[] colorList)
         {
             Colors = new List<List<int>> { };
 
@@ -49,7 +45,8 @@ namespace WallpaperMaker.Classes
                 return Color.FromArgb(255, chosenColor[0], chosenColor[1], chosenColor[2]);
             }
         }
-        internal void addColor(Color toAdd)
+
+        public void addColor(Color toAdd)
         {
             Colors.Add(new List<int> { 255, toAdd.R, toAdd.G, toAdd.B });
         }

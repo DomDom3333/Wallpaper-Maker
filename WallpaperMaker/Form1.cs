@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WallpaperMaker.Classes;
-using static Utils;
-namespace WallpaperMaker
+using WallpaperMaker.Domain;
+using static WallpaperMaker.WinForm.WinFormUtils;
+
+namespace WallpaperMaker.WinForm
 {
     public partial class frm_Main : Form
     {
@@ -35,11 +31,13 @@ namespace WallpaperMaker
                 PalletInUse = avaliablePallets[0];
             }
         }
+
         private void bt_AutoDetect_Click(object sender, EventArgs e)
         {
             fillResolutionBoxes();
             setPreviewSize();
         }
+
         private void bt_Generate_Click(object sender, EventArgs e)
         {
             bt_Generate.Enabled = false;
@@ -54,15 +52,18 @@ namespace WallpaperMaker
             }
             bt_Generate.Enabled = true;
         }
+
         private void bt_Exit_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
+
         private void bt_Resize_Click(object sender, EventArgs e)
         {
             setPreviewSize();
             updateMSList();
         }
+
         private void tb_xRes_Leave(object sender, EventArgs e)
         {
             if (!int.TryParse(tb_xRes.Text, out int parsedValue))
@@ -74,6 +75,7 @@ namespace WallpaperMaker
             setPreviewSize();
             updateMSList();
         }
+
         private void tb_yRes_Leave(object sender, EventArgs e)
         {
             if (!int.TryParse(tb_yRes.Text, out int parsedValue))
@@ -85,15 +87,18 @@ namespace WallpaperMaker
             setPreviewSize();
             updateMSList();
         }
+
         private void bt_SaveOutput_Click(object sender, EventArgs e)
         {
             SaveOutput();
         }
+
         private void bt_Settings_Click(object sender, EventArgs e)
         {
             SettingsPannel settings = new SettingsPannel();
             settings.Show();
         }
+
         private void bt_Colors_Click(object sender, EventArgs e)
         {
             ColorPicker colors = new ColorPicker(avaliablePallets);
@@ -101,6 +106,7 @@ namespace WallpaperMaker
             avaliablePallets = colors.ExistingPallets;
             updatePalletUsed();
         }
+
         private void cb_CollorPalletUsed_SelectedIndexChanged(object sender, EventArgs e)
         {
             PalletInUse = avaliablePallets[cb_CollorPalletUsed.SelectedIndex];
@@ -121,6 +127,7 @@ namespace WallpaperMaker
                 PalletInUse = avaliablePallets[cb_CollorPalletUsed.SelectedIndex];
             }
         }
+
         private void updateAvaliablePallets()
         {
             cb_CollorPalletUsed.Items.Clear();
@@ -129,6 +136,7 @@ namespace WallpaperMaker
                 cb_CollorPalletUsed.Items.Add(item.Name);
             }
         }
+
         private void initFormElements()
         {
             fillResolutionBoxes();
@@ -136,19 +144,21 @@ namespace WallpaperMaker
             updateMSList();
             Size size = new Size(xRes/2, yRes/2);
             pb_Preview.MaximumSize = size;
-            avaliablePallets = UnpackUserColorPallets(Properties.Settings.Default.UserColorPallets);
+            avaliablePallets = Utilities.UnpackUserColorPallets(Properties.Settings.Default.UserColorPallets);
             if (File.Exists(Path.Combine("Resources", "ColorPallets.json")))
             {
-                avaliablePallets.AddRange(UnpackExternalColorPallets());
+                avaliablePallets.AddRange(Utilities.UnpackExternalColorPallets());
             }
             updatePalletUsed();
             cb_CollorPalletUsed.SelectedIndex = 0;
         }
+
         private void fillResolutionBoxes()
         {
             tb_xRes.Text = grabXRes().ToString();
             tb_yRes.Text = grabYRes().ToString();
         }
+
         private void setPreviewSize()
         {
             xRes = Int32.Parse(tb_xRes.Text);
@@ -156,6 +166,7 @@ namespace WallpaperMaker
             pb_Preview.Width = xRes/2;
             pb_Preview.Height = yRes/2;
         }
+
         private async Task beginGeneratorAsync()
         {
             finishedArt = null;
@@ -163,7 +174,7 @@ namespace WallpaperMaker
             setPreviewSize();
             Generator Gen = new Generator(PalletInUse, xRes,yRes, MSLevel);
 
-            finishedArt = await Task.Run(() => Gen.Generate());
+            finishedArt = await Task.Run(() => Gen.Generate(Properties.Settings.Default.Seed));
 
             pb_Preview.Image = finishedArt;
         }
@@ -211,6 +222,7 @@ namespace WallpaperMaker
             //finishedArt.Save(fullOutput, ImageFormat.Jpeg);
             
         }
+
         private void updateMSList()
         {
             int prevSelectedIndex = cb_MSLevel.SelectedIndex;
