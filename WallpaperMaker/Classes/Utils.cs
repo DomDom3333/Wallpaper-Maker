@@ -89,11 +89,8 @@ class Utils
         }
         return loadedPallets;
     }
-    internal static List<Pallet> UnpackInternalColorPallets()
+    internal static List<Pallet> UnpackUserColorPallets(string jsonText)
     {
-        string jsonText = Resources.DefaultColorPallets;
-
-
         JObject jObject = JObject.Parse(jsonText);
         JToken[] jPallets = jObject["Pallets"].ToArray();
         JToken finalPallet;
@@ -114,6 +111,48 @@ class Utils
             loadedPallets.Add(new Pallet(palletName, palletColors.ToArray()));
         }
         return loadedPallets;
+    }
+    internal static string PackUpUserColorPallets(List<Pallet> toSave)
+    {
+        StringBuilder sb = new StringBuilder();
+        StringWriter sw = new StringWriter(sb);
+
+        using (JsonWriter writer = new JsonTextWriter(sw))
+        {
+            writer.Formatting = Formatting.Indented;
+
+            writer.WriteStartObject();
+            writer.WritePropertyName("Pallets");
+            writer.WriteStartArray();
+            foreach (Pallet item in toSave)
+            {
+                writer.WriteStartObject();
+                writer.WritePropertyName("Pallet");
+                writer.WriteStartObject();
+                writer.WritePropertyName("Name");
+                writer.WriteValue(item.Name);
+                writer.WritePropertyName("Colors");
+                writer.WriteStartArray();
+                foreach (List<int> intList in item.Colors)
+                {
+                    if (intList.Count > 3)
+                    {
+                        writer.WriteValue($"{intList[1]},{intList[2]},{intList[3]}");
+                    }
+                    else
+                    {
+                        writer.WriteValue($"{intList[0]},{intList[1]},{intList[2]}");
+                    }
+                }
+                writer.WriteEnd();
+                writer.WriteEndObject();
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+        string output = sb.ToString();
+        return output;
     }
 }
 

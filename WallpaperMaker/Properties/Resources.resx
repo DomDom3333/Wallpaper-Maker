@@ -117,22 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DefaultColorPallets" xml:space="preserve">
-    <value>{
-  "Pallets": [
-    {
-      "Pallet": {
-        "Name": "Sample Pallet",
-        "Colors": [
-          "229,244,227",
-          "93,169,233",
-          "0,63,145",
-          "255,255,255",
-          "109,50,109"
-        ]
-      }
-    }
-  ]
-}</value>
-  </data>
 </root>

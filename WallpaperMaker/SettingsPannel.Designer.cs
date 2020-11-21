@@ -342,7 +342,11 @@ namespace WallpaperMaker
             this.Controls.Add(this.tb_AmoutSquares);
             this.Controls.Add(this.lbl_AmoutRecs);
             this.Controls.Add(this.tb_AmoutRecs);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "SettingsPannel";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "SettingsPannel";
             this.Load += new System.EventHandler(this.SettingsPannel_Load);
             ((System.ComponentModel.ISupportInitialize)(this.tb_AmoutRecs)).EndInit();
@@ -367,7 +371,6 @@ namespace WallpaperMaker
         private System.Windows.Forms.Label lbl_AmountEllies;
         private System.Windows.Forms.TrackBar tb_AmoutEllies;
         private System.Windows.Forms.Label lbl_AmountCircles;
-        private System.Windows.Forms.TrackBar trackBar3;
         private System.Windows.Forms.Label lbl_SizeRecs;
         private System.Windows.Forms.TrackBar tb_SizeRecs;
         private System.Windows.Forms.TrackBar tb_SizeSquares;

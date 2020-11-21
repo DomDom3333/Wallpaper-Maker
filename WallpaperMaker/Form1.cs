@@ -17,6 +17,7 @@ namespace WallpaperMaker
     public partial class frm_Main : Form
     {
         internal List<Pallet> avaliablePallets { get; set; }
+        internal Pallet PalletInUse { get; set; }
         internal Bitmap finishedArt { get; set; }
         public int xRes { get; set; }
         public int yRes { get; set; }
@@ -26,6 +27,14 @@ namespace WallpaperMaker
             initFormElements();
         }
         //UI EVENTS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private void frm_Main_Load(object sender, EventArgs e)
+        {
+            if(cb_CollorPalletUsed.SelectedIndex != avaliablePallets.IndexOf(PalletInUse))
+            {
+                cb_CollorPalletUsed.SelectedIndex = 0;
+                PalletInUse = avaliablePallets[0];
+            }
+        }
         private void bt_AutoDetect_Click(object sender, EventArgs e)
         {
             fillResolutionBoxes();
@@ -61,15 +70,41 @@ namespace WallpaperMaker
         }
         private void bt_Settings_Click(object sender, EventArgs e)
         {
-            SettingsPannel form = new SettingsPannel();
-            form.Show();
+            SettingsPannel settings = new SettingsPannel();
+            settings.Show();
+        }
+        private void bt_Colors_Click(object sender, EventArgs e)
+        {
+            ColorPicker colors = new ColorPicker(avaliablePallets);
+            var uselessVar = colors.ShowDialog();
+            avaliablePallets = colors.ExistingPallets;
+            updatePalletUsed();
+        }
+        private void cb_CollorPalletUsed_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            PalletInUse = avaliablePallets[cb_CollorPalletUsed.SelectedIndex];
         }
         //Form Functions ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-        private void fillResolutionBoxes()
+        private void updatePalletUsed()
         {
-            tb_xRes.Text = grabXRes().ToString();
-            tb_yRes.Text = grabYRes().ToString();
+            updateAvaliablePallets();
+            if (PalletInUse == null || !avaliablePallets.Contains(PalletInUse))
+            {
+                PalletInUse = avaliablePallets[0];
+                cb_CollorPalletUsed.SelectedIndex = 0;
+            }
+            else if(cb_CollorPalletUsed.SelectedIndex > 0)
+            {
+                PalletInUse = avaliablePallets[cb_CollorPalletUsed.SelectedIndex];
+            }
+        }
+        private void updateAvaliablePallets()
+        {
+            cb_CollorPalletUsed.Items.Clear();
+            foreach (Pallet item in avaliablePallets)
+            {
+                cb_CollorPalletUsed.Items.Add(item.Name);
+            }
         }
         private void initFormElements()
         {
@@ -78,6 +113,18 @@ namespace WallpaperMaker
             updateMSList();
             Size size = new Size(xRes/2, yRes/2);
             pb_Preview.MaximumSize = size;
+            avaliablePallets = UnpackUserColorPallets(Properties.Settings.Default.UserColorPallets);
+            if (File.Exists(Path.Combine("Resources", "ColorPallets.json")))
+            {
+                avaliablePallets.AddRange(UnpackExternalColorPallets());
+            }
+            updatePalletUsed();
+            cb_CollorPalletUsed.SelectedIndex = 0;
+        }
+        private void fillResolutionBoxes()
+        {
+            tb_xRes.Text = grabXRes().ToString();
+            tb_yRes.Text = grabYRes().ToString();
         }
         private void setPreviewSize()
         {
@@ -90,10 +137,8 @@ namespace WallpaperMaker
         {
             finishedArt = null;
             int MSLevel = cb_MSLevel.SelectedIndex;
-            //avaliablePallets = UnpackInternalColorPallets();      Add this later when color pallets get merged into exe (resources). Use External .json for now to make it possible to choose a color.
-            avaliablePallets.AddRange(UnpackExternalColorPallets());
             setPreviewSize();
-            Generator Gen = new Generator(RandomPalletFromList(avaliablePallets), xRes,yRes, MSLevel);
+            Generator Gen = new Generator(PalletInUse, xRes,yRes, MSLevel);
 
             finishedArt = await Task.Run(() => Gen.Generate());
 

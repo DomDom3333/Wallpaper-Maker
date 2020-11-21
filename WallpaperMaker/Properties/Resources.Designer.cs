@@ -59,29 +59,5 @@ namespace WallpaperMaker.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;Pallets&quot;: [
-        ///    {
-        ///      &quot;Pallet&quot;: {
-        ///        &quot;Name&quot;: &quot;Sample Pallet&quot;,
-        ///        &quot;Colors&quot;: [
-        ///          &quot;229,244,227&quot;,
-        ///          &quot;93,169,233&quot;,
-        ///          &quot;0,63,145&quot;,
-        ///          &quot;255,255,255&quot;,
-        ///          &quot;109,50,109&quot;
-        ///        ]
-        ///      }
-        ///    }
-        ///  ]
-        ///}.
-        /// </summary>
-        internal static string DefaultColorPallets {
-            get {
-                return ResourceManager.GetString("DefaultColorPallets", resourceCulture);
-            }
-        }
     }
 }

@@ -34,5 +34,44 @@ namespace WallpaperMaker.Properties {
                 this["Seed"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"{
+  ""Pallets"": [
+    {
+      ""Pallet"": {
+        ""Name"": ""Sample Pallet"",
+        ""Colors"": [
+          ""229,244,227"",
+          ""93,169,233"",
+          ""0,63,145"",
+          ""255,255,255"",
+          ""109,50,109""
+        ]
+      }
+    },
+    {
+      ""Pallet"": {
+        ""Name"": ""Another Pallet"",
+        ""Colors"": [
+          ""109,238,170"",
+          ""183,209,18"",
+          ""216,236,126"",
+          ""210,64,22"",
+          ""177,107,7""
+        ]
+      }
+    }
+  ]
+}")]
+        public string UserColorPallets {
+            get {
+                return ((string)(this["UserColorPallets"]));
+            }
+            set {
+                this["UserColorPallets"] = value;
+            }
+        }
     }
 }

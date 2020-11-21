@@ -10,8 +10,8 @@ namespace WallpaperMaker.Classes
 {
     class Pallet
     {
-        public string Name { get; private set; }
-        public List<List<int>> Colors { get; private set; }
+        internal string Name { get; private set; }
+        internal List<List<int>> Colors { get; private set; }
 
         internal Pallet(string newName, string[] colorList)
         {
@@ -34,8 +34,18 @@ namespace WallpaperMaker.Classes
         internal Color RandomPalletElement()
         {
             List<int> chosenPallet = Colors[RandomNumber(Colors.Count)];
-            return Color.FromArgb(255, chosenPallet[0], chosenPallet[1], chosenPallet[2]);
+            if (chosenPallet.Count > 3)
+            {
+                return Color.FromArgb(255, chosenPallet[1], chosenPallet[2], chosenPallet[3]);
+            }
+            else
+            {
+                return Color.FromArgb(255, chosenPallet[0], chosenPallet[1], chosenPallet[2]);
+            }
         }
-
+        internal void addColor(Color toAdd)
+        {
+            Colors.Add(new List<int> { 255, toAdd.R, toAdd.G, toAdd.B });
+        }
     }
 }
