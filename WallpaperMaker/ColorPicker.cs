@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WallpaperMaker.Classes;
+using WallpaperMaker.Domain;
 
-namespace WallpaperMaker
+namespace WallpaperMaker.WinForm
 {
     public partial class ColorPicker : Form
     {
@@ -67,7 +67,7 @@ namespace WallpaperMaker
                     return;
                 }
             }
-            Properties.Settings.Default.UserColorPallets = Utils.PackUpUserColorPallets(ExistingPallets);
+            Properties.Settings.Default.UserColorPallets = Utilities.PackUpUserColorPallets(ExistingPallets);
             this.Close();
         }
         private void bt_DeleteColor_Click(object sender, EventArgs e)
@@ -243,7 +243,7 @@ namespace WallpaperMaker
                     e.Cancel = true;
                 }
             }
-            Properties.Settings.Default.UserColorPallets = Utils.PackUpUserColorPallets(ExistingPallets);
+            Properties.Settings.Default.UserColorPallets = Utilities.PackUpUserColorPallets(ExistingPallets);
         }
     }
 }

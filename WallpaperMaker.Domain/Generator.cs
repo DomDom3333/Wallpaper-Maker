@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static Utils;
 
-namespace WallpaperMaker.Classes
+namespace WallpaperMaker.Domain
 {
-    class Generator
+    public class Generator
     {
-
         private int xRes { get; set; } = 1920;
         private int yRes { get; set; } = 1080;
         private int supersampling { get; set; }
@@ -21,7 +12,9 @@ namespace WallpaperMaker.Classes
         private Pallet colorPalletToUse { get; set; }
         private Bitmap workingImage { get; set; }
         private ElementAgregator Maker;
-        internal Generator(Pallet goalColor, int horRes, int vertRes, int MS)
+
+
+        public Generator(Pallet goalColor, int horRes, int vertRes, int MS)
         {
             supersampling = MS;
 
@@ -44,12 +37,13 @@ namespace WallpaperMaker.Classes
             colorPalletToUse = goalColor;
         }
 
-        internal Bitmap Generate()
+        public Bitmap Generate(string seed)
         {
-            GenerateShapes();
+            GenerateShapes(seed);
             DrawAll();
             return workingImage;
         }
+
         ~Generator()
         {
             Maker = null;
@@ -57,9 +51,8 @@ namespace WallpaperMaker.Classes
             g.Dispose(); 
         }
 
-        private void GenerateShapes()
+        private void GenerateShapes(string seed)
         {
-            string seed = Properties.Settings.Default.Seed;
             Size targetRes = new Size(xRes, yRes);
             Maker = new ElementAgregator(seed, targetRes);
             if (seed.Contains('0'))
@@ -82,15 +75,15 @@ namespace WallpaperMaker.Classes
             {
                 Maker.MakeAll();
             }
-
         }
+
         private void DrawAll()
         {
-            SolidBrush mainBrush = new SolidBrush(colorPalletToUse.RandomPalletElement());
-            Rectangle rec = new Rectangle(0, 0, xRes, yRes);
+            var mainBrush = new SolidBrush(colorPalletToUse.RandomPalletElement());
+            var rec = new Rectangle(0, 0, xRes, yRes);
             g.FillRectangle(mainBrush, rec);
 
-            List<int> drawOrder = listOfRandomSequentialNumbers(5);
+            var drawOrder = Utilities.listOfRandomSequentialNumbers(5);
             try
             {
                 foreach (int turn in drawOrder)
@@ -99,7 +92,7 @@ namespace WallpaperMaker.Classes
                     {
                         case 1:
                             if (Maker.Rectangles == null) break;
-                            foreach (Shape shapeToDraw in Maker.Rectangles)
+                            foreach (var shapeToDraw in Maker.Rectangles)
                             {
                                 mainBrush.Color = colorPalletToUse.RandomPalletElement();
                                 DrawRec(shapeToDraw.Rectangles, mainBrush, shapeToDraw.rotation);
@@ -107,7 +100,7 @@ namespace WallpaperMaker.Classes
                             break;
                         case 2:
                             if (Maker.Squares == null) break;
-                            foreach (Shape shapeToDraw in Maker.Squares)
+                            foreach (var shapeToDraw in Maker.Squares)
                             {
                                 mainBrush.Color = colorPalletToUse.RandomPalletElement();
                                 DrawSquares(shapeToDraw.Squares, mainBrush, shapeToDraw.rotation);
@@ -115,7 +108,7 @@ namespace WallpaperMaker.Classes
                             break;
                         case 3:
                             if (Maker.Ellipsies == null) break;
-                            foreach (Shape shapeToDraw in Maker.Ellipsies)
+                            foreach (var shapeToDraw in Maker.Ellipsies)
                             {
                                 mainBrush.Color = colorPalletToUse.RandomPalletElement();
                                 DrawEllis(shapeToDraw.Ellipsies, mainBrush, shapeToDraw.rotation);
@@ -123,7 +116,7 @@ namespace WallpaperMaker.Classes
                             break;
                         case 4:
                             if (Maker.Circles == null) break;
-                            foreach (Shape shapeToDraw in Maker.Circles)
+                            foreach (var shapeToDraw in Maker.Circles)
                             {
                                 mainBrush.Color = colorPalletToUse.RandomPalletElement();
                                 DrawCircles(shapeToDraw.Circles, mainBrush, shapeToDraw.rotation);
@@ -137,7 +130,7 @@ namespace WallpaperMaker.Classes
             }
             catch
             {
-
+                //TODO: Empty catch blocks are a code-smell
             }
             mainBrush.Dispose();
             g.Dispose();
@@ -149,16 +142,19 @@ namespace WallpaperMaker.Classes
             g.RotateTransform(rotation);
             g.FillRectangle(brush, rec);
         }
+
         private void DrawSquares(Rectangle rec, Brush brush, int rotation)
         {
             g.RotateTransform(rotation);
             g.FillRectangle(brush, rec);
         }
+
         private void DrawEllis(Rectangle rec, Brush brush, int rotation)
         {
             g.RotateTransform(rotation);
             g.FillEllipse(brush, rec);
         }
+
         private void DrawCircles(Rectangle rec, Brush brush, int rotation)
         {
             g.RotateTransform(rotation);
