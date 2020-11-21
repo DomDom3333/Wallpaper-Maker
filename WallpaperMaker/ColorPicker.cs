@@ -68,6 +68,7 @@ namespace WallpaperMaker
                 }
             }
             Properties.Settings.Default.UserColorPallets = Utils.PackUpUserColorPallets(ExistingPallets);
+            Properties.Settings.Default.Save();
             this.Close();
         }
         private void bt_DeleteColor_Click(object sender, EventArgs e)
