@@ -1,6 +1,9 @@
 # Wallpaper-Maker
 This is a WinForms based Wallpaper Generator that make Minimalist/Modern Art style wallpapers.
 
+# Samples
+https://imgur.com/a/Yav5S4y
+
 # Getting started:
 - Open the exe and punch in your resolution (in case it didnt autodetect)
 - Open the settings tab to customize what kind of shapes you want to have
