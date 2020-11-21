@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-
+using static WallpaperMaker.Domain.Utilities;
 namespace WallpaperMaker.Domain
 {
     public class Pallet
@@ -28,12 +28,12 @@ namespace WallpaperMaker.Domain
             }
         }
 
-        internal void Rename(string newName)
+        public void Rename(string newName)
         {
             Name = newName;
         }
 
-        internal Color RandomPalletElement()
+        public Color RandomPalletElement()
         {
             List<int> chosenColor = Colors[RandomNumber(Colors.Count)];
             if (chosenColor.Count > 3)
@@ -51,7 +51,7 @@ namespace WallpaperMaker.Domain
             Colors.Add(new List<int> { 255, toAdd.R, toAdd.G, toAdd.B });
         }
 
-        internal List<int> findColorList(string colors)
+        public List<int> findColorList(string colors)
         {
             string[] stringToFind = colors.Split(',');
             foreach (List<int> lists in Colors)

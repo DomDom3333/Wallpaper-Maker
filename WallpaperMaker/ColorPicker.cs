@@ -272,6 +272,7 @@ namespace WallpaperMaker.WinForm
                 }
             }
             Properties.Settings.Default.UserColorPallets = Utilities.PackUpUserColorPallets(ExistingPallets);
+            Properties.Settings.Default.Save();
         }
         private void RenamePallet()
         {

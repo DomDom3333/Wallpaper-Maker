@@ -98,6 +98,7 @@ namespace WallpaperMaker.Domain
                     palletColors.Add(finalColor);
                 }
                 loadedPallets.Add(new Pallet(palletName, palletColors.ToArray()));
+                palletColors = new List<string> { };
             }
 
             return loadedPallets;

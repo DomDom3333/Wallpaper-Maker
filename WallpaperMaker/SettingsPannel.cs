@@ -69,8 +69,16 @@ namespace WallpaperMaker.WinForm
         }
         private void bt_Done_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.Seed = tb_ResultSeed.Text;
-            this.Close();
+            if (!cb_isEnabledRecs.Checked && !cb_isEnabledSquares.Checked && !cb_isEnabledEllis.Checked && !cb_isEnabledCircles.Checked)
+            {
+                MessageBox.Show("At lest 1 Element needs to be Enabled", "Not enough elements Enabled", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                Properties.Settings.Default.Seed = tb_ResultSeed.Text;
+                this.Close();
+            }
+
         }
 
         private void bt_Cancel_Click(object sender, EventArgs e)
