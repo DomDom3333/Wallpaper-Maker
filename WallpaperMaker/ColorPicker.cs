@@ -72,13 +72,39 @@ namespace WallpaperMaker
         }
         private void bt_DeleteColor_Click(object sender, EventArgs e)
         {
-            deleteColor();
-            refreshLists();
+            if (lv_ColorsInPallet.Items.Contains(selectedColor))
+            {
+                deleteColor();
+                refreshLists();
+            }
+            else
+            {
+                MessageBox.Show("Select a color to delete", "Select Color First!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
         private void bt_DeletePallet_Click(object sender, EventArgs e)
         {
-            deletePallet();
-            refreshLists();
+            if (lb_PalletsAvaliable.Items.Contains(selectedPallet.Name))
+            {
+                deletePallet();
+                refreshLists();
+            }
+            else
+            {
+                MessageBox.Show("Select a Pallet to delete", "Select Pallet First!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+        private void bt_RenamePallet_Click(object sender, EventArgs e)
+        {
+            if (lb_PalletsAvaliable.Items.Contains(selectedPallet.Name))
+            {
+                RenamePallet();
+                refreshLists();
+            }
+            else
+            {
+                MessageBox.Show("Select a Pallet to delete", "Select Pallet First!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
 
@@ -199,6 +225,7 @@ namespace WallpaperMaker
             if (results == DialogResult.OK)
             {
                 lv_ColorsInPallet.Items.Remove(selectedColor);
+                selectedPallet.Colors.Remove(selectedPallet.findColorList(selectedColor.Text));
             }
             else
             {
@@ -244,6 +271,15 @@ namespace WallpaperMaker
                 }
             }
             Properties.Settings.Default.UserColorPallets = Utils.PackUpUserColorPallets(ExistingPallets);
+        }
+        private void RenamePallet()
+        {
+            if (findPalletByName(tb_RenamedPallet.Text) != null)
+            {
+                MessageBox.Show("This Pallet name is already taken. Please choose another", "InvalidName", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            selectedPallet.Rename(tb_RenamedPallet.Text);
         }
     }
 }

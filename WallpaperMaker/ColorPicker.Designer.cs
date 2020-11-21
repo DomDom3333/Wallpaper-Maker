@@ -40,6 +40,8 @@ namespace WallpaperMaker
             this.bt_Done = new System.Windows.Forms.Button();
             this.lv_ColorsInPallet = new System.Windows.Forms.ListView();
             this.tb_newPalletName = new System.Windows.Forms.TextBox();
+            this.bt_RenamePallet = new System.Windows.Forms.Button();
+            this.tb_RenamedPallet = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pb_ColorPreview)).BeginInit();
             this.SuspendLayout();
             // 
@@ -147,11 +149,31 @@ namespace WallpaperMaker
             this.tb_newPalletName.TabIndex = 11;
             this.tb_newPalletName.Text = "NewPalletName";
             // 
+            // bt_RenamePallet
+            // 
+            this.bt_RenamePallet.Location = new System.Drawing.Point(12, 167);
+            this.bt_RenamePallet.Name = "bt_RenamePallet";
+            this.bt_RenamePallet.Size = new System.Drawing.Size(75, 44);
+            this.bt_RenamePallet.TabIndex = 12;
+            this.bt_RenamePallet.Text = "Rename Pallet";
+            this.bt_RenamePallet.UseVisualStyleBackColor = true;
+            this.bt_RenamePallet.Click += new System.EventHandler(this.bt_RenamePallet_Click);
+            // 
+            // tb_RenamedPallet
+            // 
+            this.tb_RenamedPallet.Location = new System.Drawing.Point(93, 167);
+            this.tb_RenamedPallet.Name = "tb_RenamedPallet";
+            this.tb_RenamedPallet.Size = new System.Drawing.Size(121, 23);
+            this.tb_RenamedPallet.TabIndex = 13;
+            this.tb_RenamedPallet.Text = "Renamed Pallet";
+            // 
             // ColorPicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(468, 315);
+            this.Controls.Add(this.tb_RenamedPallet);
+            this.Controls.Add(this.bt_RenamePallet);
             this.Controls.Add(this.tb_newPalletName);
             this.Controls.Add(this.lv_ColorsInPallet);
             this.Controls.Add(this.bt_Done);
@@ -190,5 +212,7 @@ namespace WallpaperMaker
         private System.Windows.Forms.Button bt_Done;
         private System.Windows.Forms.ListView lv_ColorsInPallet;
         private System.Windows.Forms.TextBox tb_newPalletName;
+        private System.Windows.Forms.Button bt_RenamePallet;
+        private System.Windows.Forms.TextBox tb_RenamedPallet;
     }
 }

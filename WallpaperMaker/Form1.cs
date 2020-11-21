@@ -105,7 +105,9 @@ namespace WallpaperMaker
         {
             PalletInUse = avaliablePallets[cb_CollorPalletUsed.SelectedIndex];
         }
+
         //Form Functions ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
         private void updatePalletUsed()
         {
             updateAvaliablePallets();
