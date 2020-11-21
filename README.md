@@ -11,6 +11,7 @@ This is a WinForms based Wallpaper Generator that make Minimalist/Modern Art sty
 # Features:
 - Multisampling for even higher Resolutions!
 - Flexible Color Pallet options that allow for unlimited Pallets and Colors per Pallet
+- Shapes get drawn in random order, meaning even with the same settings, it will never look the same due to layering
 - Import lots of Pallets at once by creating a /Resources/ColorPallets.json file and using the following format
 ```
 {
