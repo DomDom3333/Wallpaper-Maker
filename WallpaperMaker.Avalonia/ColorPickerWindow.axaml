@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WallpaperMaker.Avalonia.ColorPickerWindow"
+        Title="Color Palettes"
+        Width="580" Height="420"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid ColumnDefinitions="*,*,Auto" RowDefinitions="Auto,*,Auto" Margin="12">
+        <!-- Column headers -->
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Palettes" FontWeight="SemiBold" Margin="0,0,0,4" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Colors in Palette" FontWeight="SemiBold" Margin="8,0,0,4" />
+
+        <!-- Palette list -->
+        <ListBox Grid.Row="1" Grid.Column="0" x:Name="LbPalettes" SelectionChanged="LbPalettes_SelectionChanged" />
+
+        <!-- Colors list -->
+        <ListBox Grid.Row="1" Grid.Column="1" x:Name="LbColors" Margin="8,0,0,0" SelectionChanged="LbColors_SelectionChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="24" Height="24" CornerRadius="3"
+                                Background="{Binding Brush}" BorderBrush="Gray" BorderThickness="1" />
+                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Preview + actions -->
+        <StackPanel Grid.Row="1" Grid.Column="2" Spacing="6" Margin="8,0,0,0" Width="140">
+            <TextBlock Text="Preview:" />
+            <Border x:Name="BdrPreview" Width="80" Height="80" CornerRadius="4"
+                    BorderBrush="Gray" BorderThickness="1" />
+
+            <Separator Margin="0,4" />
+            <TextBlock Text="Palette name:" />
+            <TextBox x:Name="TbPaletteName" Text="New Palette" />
+            <Button Content="New Palette" Click="BtnNewPalette_Click" HorizontalAlignment="Stretch" />
+            <Button Content="Rename" Click="BtnRenamePalette_Click" HorizontalAlignment="Stretch" />
+            <Button Content="Delete Palette" Click="BtnDeletePalette_Click" HorizontalAlignment="Stretch" />
+
+            <Separator Margin="0,4" />
+            <Button Content="Add Color" Click="BtnAddColor_Click" HorizontalAlignment="Stretch" />
+            <Button Content="Delete Color" Click="BtnDeleteColor_Click" HorizontalAlignment="Stretch" />
+        </StackPanel>
+
+        <!-- Color input area -->
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+            <TextBlock Text="R:" VerticalAlignment="Center" />
+            <TextBox x:Name="TbR" Width="50" Text="128" />
+            <TextBlock Text="G:" VerticalAlignment="Center" />
+            <TextBox x:Name="TbG" Width="50" Text="128" />
+            <TextBlock Text="B:" VerticalAlignment="Center" />
+            <TextBox x:Name="TbB" Width="50" Text="128" />
+        </StackPanel>
+
+        <!-- Done button -->
+        <Button Grid.Row="2" Grid.Column="2" Content="Done" Click="BtnDone_Click" Margin="8,8,0,0"
+                HorizontalAlignment="Stretch" />
+    </Grid>
+</Window>
