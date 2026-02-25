@@ -12,7 +12,7 @@ public partial class MainWindow : Window
     private List<Pallet> _pallets = new();
     private Pallet? _activePalette;
     private SKBitmap? _lastBitmap;
-    private string _seed = "330999996666001199999999999";
+    private WallpaperConfig _config = WallpaperConfig.CreateDefault();
 
     private const string DefaultPalletJson = """
     {
@@ -66,11 +66,9 @@ public partial class MainWindow : Window
 
     private void DetectResolution()
     {
-        // Prefer the screen the window is currently on; fall back to primary
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
         if (screen != null)
         {
-            // Screen.Bounds is in logical (DIP) pixels on some platforms; multiply
             TbWidth.Text  = screen.Bounds.Width.ToString();
             TbHeight.Text = screen.Bounds.Height.ToString();
         }
@@ -143,6 +141,8 @@ public partial class MainWindow : Window
         if (ms < 0) ms = 0;
 
         BtnGenerate.IsEnabled = false;
+        PbProgress.IsVisible = true;
+        PbProgress.IsIndeterminate = true;
         TxtStatus.Text = $"Generating {w}x{h} wallpaper (supersampling: {ms}x)...";
 
         try
@@ -150,8 +150,8 @@ public partial class MainWindow : Window
             _lastBitmap?.Dispose();
             _lastBitmap = await Task.Run(() =>
             {
-                using var gen = new Generator(_activePalette, w, h, ms);
-                return gen.Generate(_seed);
+                using var gen = new Generator(_activePalette, w, h, ms, _config);
+                return gen.Generate(_config);
             });
 
             ImgPreview.Source = SKBitmapToAvaloniaBitmap(_lastBitmap);
@@ -164,16 +164,18 @@ public partial class MainWindow : Window
         finally
         {
             BtnGenerate.IsEnabled = true;
+            PbProgress.IsVisible = false;
+            PbProgress.IsIndeterminate = false;
         }
     }
 
     private void BtnSettings_Click(object? sender, RoutedEventArgs e)
     {
-        var settingsWindow = new SettingsWindow(_seed);
+        var settingsWindow = new SettingsWindow(_config);
         settingsWindow.ShowDialog(this).ContinueWith(t =>
         {
-            if (settingsWindow.ResultSeed != null)
-                _seed = settingsWindow.ResultSeed;
+            if (settingsWindow.ResultConfig != null)
+                _config = settingsWindow.ResultConfig;
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 

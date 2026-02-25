@@ -145,6 +145,51 @@ public partial class ColorPickerWindow : Window
         RefreshColorList();
     }
 
+    private void AddGeneratedPalette(ColorHarmony harmony)
+    {
+        string baseName = harmony.ToString();
+        string name = baseName;
+        int counter = 1;
+        while (ResultPallets.Any(p => p.Name == name))
+        {
+            counter++;
+            name = $"{baseName} {counter}";
+        }
+
+        var pallet = ColorTheory.GeneratePalette(harmony, name);
+        ResultPallets.Add(pallet);
+        RefreshPaletteList();
+        LbPalettes.SelectedIndex = ResultPallets.Count - 1;
+    }
+
+    private void BtnGenComplementary_Click(object? sender, RoutedEventArgs e)
+        => AddGeneratedPalette(ColorHarmony.Complementary);
+
+    private void BtnGenAnalogous_Click(object? sender, RoutedEventArgs e)
+        => AddGeneratedPalette(ColorHarmony.Analogous);
+
+    private void BtnGenTriadic_Click(object? sender, RoutedEventArgs e)
+        => AddGeneratedPalette(ColorHarmony.Triadic);
+
+    private void BtnGenMonochromatic_Click(object? sender, RoutedEventArgs e)
+        => AddGeneratedPalette(ColorHarmony.Monochromatic);
+
+    private void BtnGenRandom_Click(object? sender, RoutedEventArgs e)
+    {
+        string name = "Random";
+        int counter = 1;
+        while (ResultPallets.Any(p => p.Name == name))
+        {
+            counter++;
+            name = $"Random {counter}";
+        }
+
+        var pallet = ColorTheory.GenerateRandomPalette(name);
+        ResultPallets.Add(pallet);
+        RefreshPaletteList();
+        LbPalettes.SelectedIndex = ResultPallets.Count - 1;
+    }
+
     private void BtnDone_Click(object? sender, RoutedEventArgs e)
     {
         Close();

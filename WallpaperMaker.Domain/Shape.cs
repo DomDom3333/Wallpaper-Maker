@@ -8,12 +8,22 @@ public class Shape
     public int Rotation { get; }
     public SKRect Bounds { get; }
     public SKPoint[]? Polygon { get; }
+    public SKPath? Path { get; }
+    public float CornerRadius { get; }
 
     public Shape(ShapeType type, int rotation, SKRect bounds)
     {
         Type = type;
         Rotation = rotation;
         Bounds = bounds;
+    }
+
+    public Shape(ShapeType type, int rotation, SKRect bounds, float cornerRadius)
+    {
+        Type = type;
+        Rotation = rotation;
+        Bounds = bounds;
+        CornerRadius = cornerRadius;
     }
 
     public Shape(ShapeType type, int rotation, SKPoint[] polygon)
@@ -24,7 +34,17 @@ public class Shape
         Bounds = CalculateBounds(polygon);
     }
 
+    public Shape(ShapeType type, int rotation, SKPath path)
+    {
+        Type = type;
+        Rotation = rotation;
+        Path = path;
+        Bounds = path.Bounds;
+    }
+
     public bool IsPolygon => Polygon != null;
+    public bool IsPath => Path != null;
+    public bool IsRoundedRect => CornerRadius > 0;
 
     private static SKRect CalculateBounds(SKPoint[] points)
     {

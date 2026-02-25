@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="WallpaperMaker.Avalonia.MainWindow"
         Title="Wallpaper Maker"
-        Width="900" Height="550"
-        MinWidth="700" MinHeight="400"
+        Width="900" Height="600"
+        MinWidth="700" MinHeight="450"
         CanResize="True">
 
     <DockPanel Margin="10">
@@ -35,10 +35,12 @@
             <ComboBox x:Name="CbMultisampling" Width="70" SelectedIndex="0" />
         </StackPanel>
 
-        <!-- Status bar -->
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,4,0,0">
-            <TextBlock x:Name="TxtStatus" Text="Ready" VerticalAlignment="Center" />
-        </StackPanel>
+        <!-- Status bar with progress -->
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+            <TextBlock Grid.Column="0" x:Name="TxtStatus" Text="Ready" VerticalAlignment="Center" />
+            <ProgressBar Grid.Column="1" x:Name="PbProgress" Width="120" Height="16"
+                         IsIndeterminate="False" IsVisible="False" Minimum="0" Maximum="100" />
+        </Grid>
 
         <!-- Preview image -->
         <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
