@@ -60,7 +60,25 @@ public partial class MainWindow : Window
             _pallets.AddRange(Utilities.UnpackExternalColorPallets());
 
         RefreshPaletteComboBox();
+        DetectResolution();
         UpdateMultisamplingList();
+    }
+
+    private void DetectResolution()
+    {
+        // Prefer the screen the window is currently on; fall back to primary
+        var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+        if (screen != null)
+        {
+            // Screen.Bounds is in logical (DIP) pixels on some platforms; multiply
+            TbWidth.Text  = screen.Bounds.Width.ToString();
+            TbHeight.Text = screen.Bounds.Height.ToString();
+        }
+        else
+        {
+            TbWidth.Text  = "1920";
+            TbHeight.Text = "1080";
+        }
     }
 
     private void RefreshPaletteComboBox()
@@ -216,17 +234,7 @@ public partial class MainWindow : Window
 
     private void BtnAutoDetect_Click(object? sender, RoutedEventArgs e)
     {
-        var screen = Screens.Primary;
-        if (screen != null)
-        {
-            TbWidth.Text = screen.Bounds.Width.ToString();
-            TbHeight.Text = screen.Bounds.Height.ToString();
-        }
-        else
-        {
-            TbWidth.Text = "1920";
-            TbHeight.Text = "1080";
-        }
+        DetectResolution();
         UpdateMultisamplingList();
     }
 
