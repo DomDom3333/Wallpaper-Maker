@@ -45,7 +45,12 @@ public class Generator : IDisposable
         if (_supersampling > 1)
             return DownsampleBitmap();
 
-        return _bitmap;
+        // Transfer ownership of _bitmap to the caller.
+        // Setting _bitmap to null prevents Dispose() from freeing memory
+        // that the caller now owns, avoiding an AccessViolationException.
+        var result = _bitmap;
+        _bitmap = null;
+        return result;
     }
 
     private SKBitmap DownsampleBitmap()
