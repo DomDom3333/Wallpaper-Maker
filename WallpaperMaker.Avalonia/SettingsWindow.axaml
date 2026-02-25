@@ -1,0 +1,68 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WallpaperMaker.Avalonia.SettingsWindow"
+        Title="Shape Settings"
+        Width="480" Height="340"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="12" Spacing="6">
+        <!-- Header row -->
+        <Grid ColumnDefinitions="Auto,*,Auto,*,Auto" Margin="0,0,0,4">
+            <TextBlock Grid.Column="0" Text="" Width="90" />
+            <TextBlock Grid.Column="1" Text="Amount" HorizontalAlignment="Center" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="2" Text="" Width="30" />
+            <TextBlock Grid.Column="3" Text="Size" HorizontalAlignment="Center" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="4" Text="Enabled" Width="65" HorizontalAlignment="Center" FontWeight="SemiBold" />
+        </Grid>
+
+        <!-- Rectangles -->
+        <Grid ColumnDefinitions="90,*,30,*,65">
+            <TextBlock Grid.Column="0" Text="Rectangles" VerticalAlignment="Center" x:Name="LblRecs" />
+            <Slider Grid.Column="1" x:Name="SlAmountRecs" Minimum="1" Maximum="9" Value="3" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <TextBlock Grid.Column="2" Text="Size" VerticalAlignment="Center" x:Name="LblSizeRecs" HorizontalAlignment="Center" />
+            <Slider Grid.Column="3" x:Name="SlSizeRecs" Minimum="1" Maximum="9" Value="6" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <CheckBox Grid.Column="4" x:Name="CbRecs" IsChecked="True" HorizontalAlignment="Center" IsCheckedChanged="AnyCheckbox_Changed" />
+        </Grid>
+
+        <!-- Squares -->
+        <Grid ColumnDefinitions="90,*,30,*,65">
+            <TextBlock Grid.Column="0" Text="Squares" VerticalAlignment="Center" x:Name="LblSquares" />
+            <Slider Grid.Column="1" x:Name="SlAmountSquares" Minimum="1" Maximum="9" Value="3" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <TextBlock Grid.Column="2" Text="Size" VerticalAlignment="Center" x:Name="LblSizeSquares" HorizontalAlignment="Center" />
+            <Slider Grid.Column="3" x:Name="SlSizeSquares" Minimum="1" Maximum="9" Value="6" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <CheckBox Grid.Column="4" x:Name="CbSquares" IsChecked="True" HorizontalAlignment="Center" IsCheckedChanged="AnyCheckbox_Changed" />
+        </Grid>
+
+        <!-- Ellipses -->
+        <Grid ColumnDefinitions="90,*,30,*,65">
+            <TextBlock Grid.Column="0" Text="Ellipses" VerticalAlignment="Center" x:Name="LblEllipses" />
+            <Slider Grid.Column="1" x:Name="SlAmountEllipses" Minimum="1" Maximum="9" Value="1" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <TextBlock Grid.Column="2" Text="Size" VerticalAlignment="Center" x:Name="LblSizeEllipses" HorizontalAlignment="Center" />
+            <Slider Grid.Column="3" x:Name="SlSizeEllipses" Minimum="1" Maximum="9" Value="1" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <CheckBox Grid.Column="4" x:Name="CbEllipses" IsChecked="False" HorizontalAlignment="Center" IsCheckedChanged="AnyCheckbox_Changed" />
+        </Grid>
+
+        <!-- Circles -->
+        <Grid ColumnDefinitions="90,*,30,*,65">
+            <TextBlock Grid.Column="0" Text="Circles" VerticalAlignment="Center" x:Name="LblCircles" />
+            <Slider Grid.Column="1" x:Name="SlAmountCircles" Minimum="1" Maximum="9" Value="9" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <TextBlock Grid.Column="2" Text="Size" VerticalAlignment="Center" x:Name="LblSizeCircles" HorizontalAlignment="Center" />
+            <Slider Grid.Column="3" x:Name="SlSizeCircles" Minimum="1" Maximum="9" Value="6" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="AnySlider_Changed" />
+            <CheckBox Grid.Column="4" x:Name="CbCircles" IsChecked="True" HorizontalAlignment="Center" IsCheckedChanged="AnyCheckbox_Changed" />
+        </Grid>
+
+        <!-- Seed display -->
+        <Separator Margin="0,4" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Seed:" VerticalAlignment="Center" />
+            <TextBox x:Name="TbSeed" IsReadOnly="True" Width="220" />
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Width="80" Click="BtnCancel_Click" />
+            <Button Content="Done" Width="80" Click="BtnDone_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>
