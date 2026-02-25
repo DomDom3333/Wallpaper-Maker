@@ -1,164 +1,170 @@
-﻿using System.Drawing;
-using System.Drawing.Drawing2D;
+using SkiaSharp;
 
-namespace WallpaperMaker.Domain
+namespace WallpaperMaker.Domain;
+
+public class Generator : IDisposable
 {
-    public class Generator
+    private readonly int _xRes;
+    private readonly int _yRes;
+    private readonly int _supersampling;
+    private readonly Pallet _palette;
+    private SKBitmap? _bitmap;
+    private SKCanvas? _canvas;
+    private ElementAgregator? _maker;
+    private bool _disposed;
+
+    public Generator(Pallet palette, int horRes, int vertRes, int supersampling)
     {
-        private int xRes { get; set; } = 1920;
-        private int yRes { get; set; } = 1080;
-        private int supersampling { get; set; }
-        private Graphics g;
-        private Pallet colorPalletToUse { get; set; }
-        private Bitmap workingImage { get; set; }
-        private ElementAgregator Maker;
+        _palette = palette;
+        _supersampling = supersampling;
 
-
-        public Generator(Pallet goalColor, int horRes, int vertRes, int MS)
+        if (_supersampling <= 0)
         {
-            supersampling = MS;
-
-            if(supersampling == 0)
-            {
-                xRes = horRes;
-                yRes = vertRes;
-                workingImage = new Bitmap(xRes, yRes);
-                workingImage.SetResolution(xRes, yRes);
-            }
-            else
-            {
-                xRes = horRes * supersampling;
-                yRes = vertRes * supersampling;
-                workingImage = new Bitmap(xRes, yRes);
-                workingImage.SetResolution(xRes / supersampling, yRes / supersampling);
-            }
-            g = Graphics.FromImage(workingImage);
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            colorPalletToUse = goalColor;
+            _xRes = horRes;
+            _yRes = vertRes;
+        }
+        else
+        {
+            _xRes = horRes * _supersampling;
+            _yRes = vertRes * _supersampling;
         }
 
-        public Bitmap Generate(string seed)
-        {
-            GenerateShapes(seed);
-            DrawAll();
-            return workingImage;
-        }
+        _bitmap = new SKBitmap(_xRes, _yRes, SKColorType.Rgba8888, SKAlphaType.Premul);
+        _canvas = new SKCanvas(_bitmap);
+        _canvas.Clear(SKColors.Transparent);
+    }
 
-        ~Generator()
-        {
-            Maker = null;
-            workingImage.Dispose();
-            g.Dispose(); 
-        }
+    public SKBitmap Generate(string seed)
+    {
+        if (_bitmap == null || _canvas == null)
+            throw new ObjectDisposedException(nameof(Generator));
 
-        private void GenerateShapes(string seed)
+        GenerateShapes(seed);
+        DrawAll();
+
+        if (_supersampling > 1)
+            return DownsampleBitmap();
+
+        return _bitmap;
+    }
+
+    private SKBitmap DownsampleBitmap()
+    {
+        int targetW = _xRes / _supersampling;
+        int targetH = _yRes / _supersampling;
+        var resized = new SKBitmap(targetW, targetH, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+        using var canvas = new SKCanvas(resized);
+        using var paint = new SKPaint
         {
-            Size targetRes = new Size(xRes, yRes);
-            Maker = new ElementAgregator(seed, targetRes);
-            if (seed.Contains('0'))
+            FilterQuality = SKFilterQuality.High,
+            IsAntialias = true
+        };
+        canvas.DrawBitmap(_bitmap!, new SKRect(0, 0, targetW, targetH), paint);
+        return resized;
+    }
+
+    private void GenerateShapes(string seed)
+    {
+        _maker = new ElementAgregator(seed, _xRes, _yRes);
+
+        bool hasDisabledShape = false;
+        for (int i = 0; i < 9; i++)
+        {
+            if (seed[i] == '0')
             {
-                bool[] boolList = new bool[9];
-                for (int i = 0; i < 9; i++)
-                {
-                    if (seed[i] == '0')
-                    {
-                        boolList[i] = false;
-                    }
-                    else
-                    {
-                        boolList[i] = true;
-                    }
-                }
-                Maker.MakeSome(boolList);
-            }
-            else
-            {
-                Maker.MakeAll();
+                hasDisabledShape = true;
+                break;
             }
         }
 
-        private void DrawAll()
+        if (hasDisabledShape)
         {
-            var mainBrush = new SolidBrush(colorPalletToUse.RandomPalletElement());
-            var rec = new Rectangle(0, 0, xRes, yRes);
-            g.FillRectangle(mainBrush, rec);
+            bool[] enabledShapes = new bool[9];
+            for (int i = 0; i < 9; i++)
+                enabledShapes[i] = seed[i] != '0';
+            _maker.MakeSome(enabledShapes);
+        }
+        else
+        {
+            _maker.MakeAll();
+        }
+    }
 
-            var drawOrder = Utilities.listOfRandomSequentialNumbers(5);
-            try
+    private void DrawAll()
+    {
+        if (_canvas == null || _maker == null)
+            return;
+
+        // Draw background with a random palette color
+        using (var bgPaint = new SKPaint { Color = _palette.RandomColor(), IsAntialias = true })
+        {
+            _canvas.DrawRect(0, 0, _xRes, _yRes, bgPaint);
+        }
+
+        // Draw shapes in random order across all shape types
+        var shapeTypes = Enum.GetValues<ShapeType>();
+        var drawOrder = Utilities.ShuffledRange(shapeTypes.Length);
+
+        using var paint = new SKPaint { IsAntialias = true };
+
+        foreach (int idx in drawOrder)
+        {
+            var type = shapeTypes[idx];
+            var shapes = _maker.GetShapesByType(type);
+            if (shapes == null) continue;
+
+            foreach (var shape in shapes)
             {
-                foreach (int turn in drawOrder)
-                {
-                    switch (turn)
-                    {
-                        case 1:
-                            if (Maker.Rectangles == null) break;
-                            foreach (var shapeToDraw in Maker.Rectangles)
-                            {
-                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                                DrawRec(shapeToDraw.Rectangles, mainBrush, shapeToDraw.rotation);
-                            }
-                            break;
-                        case 2:
-                            if (Maker.Squares == null) break;
-                            foreach (var shapeToDraw in Maker.Squares)
-                            {
-                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                                DrawSquares(shapeToDraw.Squares, mainBrush, shapeToDraw.rotation);
-                            }
-                            break;
-                        case 3:
-                            if (Maker.Ellipsies == null) break;
-                            foreach (var shapeToDraw in Maker.Ellipsies)
-                            {
-                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                                DrawEllis(shapeToDraw.Ellipsies, mainBrush, shapeToDraw.rotation);
-                            }
-                            break;
-                        case 4:
-                            if (Maker.Circles == null) break;
-                            foreach (var shapeToDraw in Maker.Circles)
-                            {
-                                mainBrush.Color = colorPalletToUse.RandomPalletElement();
-                                DrawCircles(shapeToDraw.Circles, mainBrush, shapeToDraw.rotation);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-
-                }
+                paint.Color = _palette.RandomColor();
+                DrawShape(_canvas, shape, paint);
             }
-            catch
+        }
+    }
+
+    private static void DrawShape(SKCanvas canvas, Shape shape, SKPaint paint)
+    {
+        canvas.Save();
+
+        float cx = shape.Bounds.MidX;
+        float cy = shape.Bounds.MidY;
+        canvas.RotateDegrees(shape.Rotation, cx, cy);
+
+        if (shape.IsPolygon)
+        {
+            using var path = new SKPath();
+            path.MoveTo(shape.Polygon![0]);
+            for (int i = 1; i < shape.Polygon.Length; i++)
+                path.LineTo(shape.Polygon[i]);
+            path.Close();
+            canvas.DrawPath(path, paint);
+        }
+        else
+        {
+            switch (shape.Type)
             {
-                //TODO: Empty catch blocks are a code-smell
+                case ShapeType.Rectangle:
+                case ShapeType.Square:
+                    canvas.DrawRect(shape.Bounds, paint);
+                    break;
+                case ShapeType.Ellipse:
+                case ShapeType.Circle:
+                    canvas.DrawOval(shape.Bounds, paint);
+                    break;
             }
-            mainBrush.Dispose();
-            g.Dispose();
-            //run through lists of Maker to draw all elements. Each type in their own method
         }
 
-        private void DrawRec(Rectangle rec, Brush brush, int rotation)
-        {
-            g.RotateTransform(rotation);
-            g.FillRectangle(brush, rec);
-        }
+        canvas.Restore();
+    }
 
-        private void DrawSquares(Rectangle rec, Brush brush, int rotation)
-        {
-            g.RotateTransform(rotation);
-            g.FillRectangle(brush, rec);
-        }
-
-        private void DrawEllis(Rectangle rec, Brush brush, int rotation)
-        {
-            g.RotateTransform(rotation);
-            g.FillEllipse(brush, rec);
-        }
-
-        private void DrawCircles(Rectangle rec, Brush brush, int rotation)
-        {
-            g.RotateTransform(rotation);
-            g.FillEllipse(brush, rec);
-        }
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _canvas?.Dispose();
+        _bitmap?.Dispose();
+        _canvas = null;
+        _bitmap = null;
+        GC.SuppressFinalize(this);
     }
 }

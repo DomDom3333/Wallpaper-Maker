@@ -1,150 +1,88 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+using System.Text.Json;
 
-namespace WallpaperMaker.Domain
+namespace WallpaperMaker.Domain;
+
+public static class Utilities
 {
-    public class Utilities
+    private static readonly Random Rng = new();
+
+    public static int RandomNumber(int max, int min = 0)
     {
-        public static int RandomNumber(int max, int min = 0)
+        if (max <= min) return min;
+        return Rng.Next(min, max);
+    }
+
+    public static Pallet RandomPalletFromList(List<Pallet> input)
+    {
+        return input[RandomNumber(input.Count)];
+    }
+
+    public static int SmallNumberScaler(int input, int max)
+    {
+        double step = (double)max / 9;
+        return (int)(step * input);
+    }
+
+    public static List<int> ShuffledRange(int count)
+    {
+        var list = Enumerable.Range(0, count).ToList();
+        for (int i = list.Count - 1; i > 0; i--)
         {
-            Random rand = new Random();
-            return rand.Next(min, max); ;
+            int j = Rng.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
         }
+        return list;
+    }
 
-        public static Pallet RandomPalletFromList(List<Pallet> input)
+    public static List<Pallet> UnpackExternalColorPallets()
+    {
+        string filePath = Path.Combine("Resources", "ColorPallets.json");
+        string jsonText = File.ReadAllText(filePath);
+        return DeserializePallets(jsonText);
+    }
+
+    public static List<Pallet> UnpackUserColorPallets(string jsonText)
+    {
+        return DeserializePallets(jsonText);
+    }
+
+    public static string PackUpUserColorPallets(List<Pallet> toSave)
+    {
+        var palletEntries = toSave.Select(p => new
         {
-            return input[RandomNumber(input.Count)];
-        }
-
-        public static int smallNumberScaler(int input, int max)
-        {
-            double step = max / 9;
-
-            return (int)(step * input);
-        }
-
-        public static List<int> listOfRandomSequentialNumbers(int length, bool startAtZero = false)
-        {
-            int generatedNumber = 0;
-            List<int> returnList = new List<int> { };
-            while (true)
+            Pallet = new
             {
-                generatedNumber = RandomNumber(length, 1);
-                if (!returnList.Contains(generatedNumber))
-                {
-                    returnList.Add(generatedNumber);
-                }
-                if (returnList.Count == 4)
-                {
-                    break;
-                }
+                p.Name,
+                Colors = p.Colors.Select(c => $"{c.Red},{c.Green},{c.Blue}").ToArray()
             }
-            return returnList;
-        }
+        }).ToArray();
 
-        public static List<Pallet> UnpackExternalColorPallets()
+        var wrapper = new { Pallets = palletEntries };
+        return JsonSerializer.Serialize(wrapper, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private static List<Pallet> DeserializePallets(string jsonText)
+    {
+        var pallets = new List<Pallet>();
+        using var doc = JsonDocument.Parse(jsonText);
+        var root = doc.RootElement;
+
+        if (!root.TryGetProperty("Pallets", out var palletsArray))
+            return pallets;
+
+        foreach (var entry in palletsArray.EnumerateArray())
         {
-            string filePath = Path.Combine("Resources", "ColorPallets.json");
-            string jsonText = "";
-            using (StreamReader r = new StreamReader(filePath))
+            if (!entry.TryGetProperty("Pallet", out var palletObj))
+                continue;
+
+            string name = palletObj.GetProperty("Name").GetString() ?? "Unnamed";
+            var colors = new List<string>();
+            foreach (var color in palletObj.GetProperty("Colors").EnumerateArray())
             {
-                jsonText = r.ReadToEnd();
+                colors.Add(color.GetString() ?? "0,0,0");
             }
-
-            JObject jObject = JObject.Parse(jsonText);
-            JToken[] jPallets = jObject["Pallets"].ToArray();
-            JToken finalPallet;
-
-            string palletName = "";
-            List<string> palletColors = new List<string> { };
-            List<Pallet> loadedPallets = new List<Pallet> { };
-
-
-            foreach (JToken x in jPallets)
-            {
-                finalPallet = x["Pallet"];
-                palletName = (string)finalPallet["Name"];
-                foreach (string finalColor in finalPallet["Colors"].ToArray())
-                {
-                    palletColors.Add(finalColor);
-                }
-                loadedPallets.Add(new Pallet(palletName, palletColors.ToArray()));
-            }
-            return loadedPallets;
+            pallets.Add(new Pallet(name, colors));
         }
-
-        public static List<Pallet> UnpackUserColorPallets(string jsonText)
-        {
-            var jObject = JObject.Parse(jsonText);
-            var jPallets = jObject["Pallets"].ToArray();
-            JToken finalPallet;
-
-            string palletName = "";
-            List<string> palletColors = new List<string> { };
-            List<Pallet> loadedPallets = new List<Pallet> { };
-
-
-            foreach (JToken x in jPallets)
-            {
-                finalPallet = x["Pallet"];
-                palletName = (string)finalPallet["Name"];
-                foreach (string finalColor in finalPallet["Colors"].ToArray())
-                {
-                    palletColors.Add(finalColor);
-                }
-                loadedPallets.Add(new Pallet(palletName, palletColors.ToArray()));
-                palletColors = new List<string> { };
-            }
-
-            return loadedPallets;
-        }
-
-        public static string PackUpUserColorPallets(List<Pallet> toSave)
-        {
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                writer.Formatting = Formatting.Indented;
-
-                writer.WriteStartObject();
-                writer.WritePropertyName("Pallets");
-                writer.WriteStartArray();
-                foreach (Pallet item in toSave)
-                {
-                    writer.WriteStartObject();
-                    writer.WritePropertyName("Pallet");
-                    writer.WriteStartObject();
-                    writer.WritePropertyName("Name");
-                    writer.WriteValue(item.Name);
-                    writer.WritePropertyName("Colors");
-                    writer.WriteStartArray();
-                    foreach (List<int> intList in item.Colors)
-                    {
-                        if (intList.Count > 3)
-                        {
-                            writer.WriteValue($"{intList[1]},{intList[2]},{intList[3]}");
-                        }
-                        else
-                        {
-                            writer.WriteValue($"{intList[0]},{intList[1]},{intList[2]}");
-                        }
-                    }
-                    writer.WriteEnd();
-                    writer.WriteEndObject();
-                    writer.WriteEndObject();
-                }
-                writer.WriteEndArray();
-                writer.WriteEndObject();
-            }
-            string output = sb.ToString();
-            return output;
-        }
+        return pallets;
     }
 }

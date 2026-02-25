@@ -1,202 +1,256 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Threading.Tasks;
+using SkiaSharp;
 
-namespace WallpaperMaker.Domain
+namespace WallpaperMaker.Domain;
+
+public class ElementAgregator
 {
-    public class ElementAgregator
+    private static readonly Random Rng = new();
+
+    internal List<Shape>? Rectangles { get; private set; }
+    internal List<Shape>? Squares { get; private set; }
+    internal List<Shape>? Ellipses { get; private set; }
+    internal List<Shape>? Circles { get; private set; }
+    internal List<Shape>? Triangles { get; private set; }
+    internal List<Shape>? Pentagons { get; private set; }
+    internal List<Shape>? Hexagons { get; private set; }
+    internal List<Shape>? Octagons { get; private set; }
+    internal List<Shape>? Hourglasses { get; private set; }
+
+    private readonly int[] _amounts = new int[9];
+    private readonly (int W, int H)[] _sizes = new (int, int)[9];
+
+    public int XResolution { get; }
+    public int YResolution { get; }
+    private int MaxNumberOfElements { get; } = 50;
+
+    internal ElementAgregator(string seed, int width, int height)
     {
-        internal List<Shape> Rectangles { get; private set; }
-        internal List<Shape> Squares { get; private set; }
-        internal List<Shape> Ellipsies { get; private set; }
-        internal List<Shape> Circles { get; private set; }
-        internal List<Shape> Triangles { get; private set; }
-        internal List<Shape> Pentagons { get; private set; }
-        internal List<Shape> Hexagons { get; private set; }
-        internal List<Shape> Ochtagons { get; private set; }
-        internal List<Shape> Hourglasses { get; private set; }
+        if (seed.Length != 27)
+            throw new ArgumentException($"Seed must be exactly 27 characters, got {seed.Length}.", nameof(seed));
 
-        private int amoutRecs { get;  set; }
-        private int amoutSquare { get;  set; }
-        private int amoutElls { get;  set; }
-        private int amoutCircs { get;  set; }
-        private int amoutTris { get;  set; }
-        private int amoutPents { get;  set; }
-        private int amoutHexs { get;  set; }
-        private int amoutOchs { get;  set; }
-        private int amoutHours { get;  set; }
-        private Size sizeRecs { get;  set; }
-        private Size sizeSquare { get;  set; }
-        private Size sizeElls { get;  set; }
-        private Size sizeCircs { get;  set; }
-        private Size sizeTris { get;  set; }
-        private Size sizePents { get;  set; }
-        private Size sizeHexs { get;  set; }
-        private Size sizeOchs { get;  set; }
-        private Size sizeHours { get;  set; }
-        //TODO: Removed util call dependent on winForms Screen, might not use expected resolution values
-        public int XResolution { get; set; }
-        public int YResolution { get; set; }
-        private int maxNumberOfElements { get; set; } = 50;
+        for (int i = 0; i < 9; i++)
+            _amounts[i] = seed[i] - '0';
 
-        internal ElementAgregator(string seed, Size targetRes)
+        for (int i = 0; i < 9; i++)
         {
-            if(seed.Length != 27)
-            {
-                return;
-            }
-            amoutRecs = Int16.Parse(seed[0].ToString());
-            amoutSquare = Int16.Parse(seed[1].ToString());
-            amoutElls = Int16.Parse(seed[2].ToString());
-            amoutCircs = Int16.Parse(seed[3].ToString());
-            amoutTris = Int16.Parse(seed[4].ToString());
-            amoutPents = Int16.Parse(seed[5].ToString());
-            amoutHexs = Int16.Parse(seed[6].ToString());
-            amoutOchs = Int16.Parse(seed[7].ToString());
-            amoutHours = Int16.Parse(seed[8].ToString());
-
-            sizeRecs = new Size(Int16.Parse(seed[9].ToString()), Int16.Parse(seed[10].ToString()));
-            sizeSquare = new Size(Int16.Parse(seed[11].ToString()), Int16.Parse(seed[12].ToString()));
-            sizeElls = new Size(Int16.Parse(seed[13].ToString()), Int16.Parse(seed[14].ToString()));
-            sizeCircs = new Size(Int16.Parse(seed[15].ToString()), Int16.Parse(seed[16].ToString()));
-            sizeTris = new Size(Int16.Parse(seed[17].ToString()), Int16.Parse(seed[18].ToString()));
-            sizePents = new Size(Int16.Parse(seed[19].ToString()), Int16.Parse(seed[20].ToString()));
-            sizeHexs = new Size(Int16.Parse(seed[21].ToString()), Int16.Parse(seed[22].ToString()));
-            sizeOchs = new Size(Int16.Parse(seed[23].ToString()), Int16.Parse(seed[24].ToString()));
-            sizeHours = new Size(Int16.Parse(seed[25].ToString()), Int16.Parse(seed[26].ToString()));
-
-            XResolution = targetRes.Width;
-            YResolution = targetRes.Height;
+            int sizeIdx = 9 + i * 2;
+            _sizes[i] = (seed[sizeIdx] - '0', seed[sizeIdx + 1] - '0');
         }
 
-        internal void MakeAll()
-        {
-            List<Task> tasks = new List<Task> { };
-
-            tasks.Add(Task.Run(() => MakeSquares(Utilities.smallNumberScaler(amoutSquare,maxNumberOfElements), sizeSquare)));
-            tasks.Add(Task.Run(() => MakeElls(Utilities.smallNumberScaler(amoutElls,maxNumberOfElements), sizeElls)));
-            tasks.Add(Task.Run(() => MakeRecs(Utilities.smallNumberScaler(amoutRecs,maxNumberOfElements),sizeRecs)));
-            tasks.Add(Task.Run(() => MakeCircs(Utilities.smallNumberScaler(amoutCircs,maxNumberOfElements), sizeCircs)));
-
-            Task.WhenAll(tasks);
-        }
-
-        internal void MakeSome(bool[] toMake)
-        {
-            List<Task> tasks = new List<Task> { };
-            for (int i = 0; i < toMake.Length; i++)
-            {
-                if(toMake[i] == true)
-                {
-                    switch (i)
-                    {
-                        case 0:
-                            tasks.Add(Task.Run(() => MakeRecs(Utilities.smallNumberScaler(amoutRecs, maxNumberOfElements), sizeRecs)));
-                            break;
-                        case 1:
-                            tasks.Add(Task.Run(() => MakeSquares(Utilities.smallNumberScaler(amoutSquare, maxNumberOfElements), sizeSquare)));
-                            break;
-                        case 2:
-                            tasks.Add(Task.Run(() => MakeElls(Utilities.smallNumberScaler(amoutElls, maxNumberOfElements), sizeElls)));
-                            break;
-                        case 3:
-                            tasks.Add(Task.Run(() => MakeCircs(Utilities.smallNumberScaler(amoutCircs, maxNumberOfElements), sizeCircs)));
-                            break;
-                        case 4:
-                            break;
-                        case 5:
-                            break;
-                        case 6:
-                            break;
-                        case 7:
-                            break;
-                        case 8:
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            Task.WhenAll(tasks);
-        }
-
-        private void MakeRecs(int amout, Size maxSize)//Sample Creating function
-        {
-            Rectangles = new List<Shape> { };
-            int xRes = XResolution;
-            int yRes = YResolution;
-            int rotation = 0;
-            Rectangle rec = new Rectangle(0, 0, xRes, yRes);
-
-            for (int i = 0; i <= amout; i++)
-            {
-                rotation = Utilities.RandomNumber(90);
-                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
-                rec.Width = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width,xRes));
-                rec.Height = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Height, xRes));
-                Rectangles.Add(new Shape(rotation, "Rectangle", rec));
-            }
-        }
-
-        private void MakeSquares(int amout, Size maxSize)
-        {
-            Squares = new List<Shape> { };
-            int xRes = XResolution;
-            int yRes = YResolution;
-            int size = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width, xRes));
-            int rotation = 00;
-            Rectangle rec = new Rectangle(0, 0, xRes, yRes);
-
-            for (int i = 0; i <= amout; i++)
-            {
-                rotation = Utilities.RandomNumber(90);
-                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
-                rec.Width = size;
-                rec.Height = size;
-                Squares.Add(new Shape(rotation, "Square", rec));
-            }
-        }
-
-        private void MakeElls(int amout, Size maxSize)
-        {
-            Ellipsies = new List<Shape> { };
-            int xRes = XResolution;
-            int yRes = YResolution;
-            int rotation = 0;
-            Rectangle rec = new Rectangle(0, 0, xRes, yRes);
-
-            for (int i = 0; i <= amout; i++)
-            {
-                rotation = Utilities.RandomNumber(90);
-                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
-                rec.Width = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width, xRes));
-                rec.Height = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Height, xRes));
-                Ellipsies.Add(new Shape(rotation, "Ellipse", rec));
-            }
-        }
-
-        private void MakeCircs(int amout, Size maxSize)
-        {
-            Circles = new List<Shape> { };
-            int xRes = XResolution;
-            int yRes = YResolution;
-            int size = Utilities.RandomNumber(Utilities.smallNumberScaler(maxSize.Width+1, xRes));
-            int rotation = 0;
-            Rectangle rec = new Rectangle(0, 0, xRes, yRes);
-
-            for (int i = 0; i <= amout; i++)
-            {
-                rotation = Utilities.RandomNumber(90);
-                rec.X = Utilities.RandomNumber(xRes - (xRes / 10), xRes / 10);
-                rec.Y = Utilities.RandomNumber(yRes - (yRes / 10), yRes / 100);
-                rec.Width = size;
-                rec.Height = size;
-                Circles.Add(new Shape(rotation, "Circle", rec));
-            }
-        }       
+        XResolution = width;
+        YResolution = height;
     }
+
+    internal void MakeAll()
+    {
+        var tasks = new List<Task>();
+
+        for (int i = 0; i < 9; i++)
+        {
+            if (_amounts[i] > 0)
+                tasks.Add(CreateShapesForType(i));
+        }
+
+        Task.WaitAll(tasks.ToArray());
+    }
+
+    internal void MakeSome(bool[] toMake)
+    {
+        var tasks = new List<Task>();
+
+        for (int i = 0; i < Math.Min(toMake.Length, 9); i++)
+        {
+            if (toMake[i] && _amounts[i] > 0)
+                tasks.Add(CreateShapesForType(i));
+        }
+
+        Task.WaitAll(tasks.ToArray());
+    }
+
+    private Task CreateShapesForType(int index)
+    {
+        var type = (ShapeType)index;
+        int count = Utilities.SmallNumberScaler(_amounts[index], MaxNumberOfElements);
+        var size = _sizes[index];
+
+        return Task.Run(() =>
+        {
+            var shapes = type switch
+            {
+                ShapeType.Rectangle => MakeRectangles(count, size.W, size.H),
+                ShapeType.Square => MakeSquares(count, size.W),
+                ShapeType.Ellipse => MakeEllipses(count, size.W, size.H),
+                ShapeType.Circle => MakeCircles(count, size.W),
+                ShapeType.Triangle => MakePolygons(ShapeType.Triangle, count, size.W, size.H, 3),
+                ShapeType.Pentagon => MakePolygons(ShapeType.Pentagon, count, size.W, size.H, 5),
+                ShapeType.Hexagon => MakePolygons(ShapeType.Hexagon, count, size.W, size.H, 6),
+                ShapeType.Octagon => MakePolygons(ShapeType.Octagon, count, size.W, size.H, 8),
+                ShapeType.Hourglass => MakeHourglasses(count, size.W, size.H),
+                _ => new List<Shape>()
+            };
+
+            AssignShapes(type, shapes);
+        });
+    }
+
+    private void AssignShapes(ShapeType type, List<Shape> shapes)
+    {
+        switch (type)
+        {
+            case ShapeType.Rectangle: Rectangles = shapes; break;
+            case ShapeType.Square: Squares = shapes; break;
+            case ShapeType.Ellipse: Ellipses = shapes; break;
+            case ShapeType.Circle: Circles = shapes; break;
+            case ShapeType.Triangle: Triangles = shapes; break;
+            case ShapeType.Pentagon: Pentagons = shapes; break;
+            case ShapeType.Hexagon: Hexagons = shapes; break;
+            case ShapeType.Octagon: Octagons = shapes; break;
+            case ShapeType.Hourglass: Hourglasses = shapes; break;
+        }
+    }
+
+    private List<Shape> MakeRectangles(int count, int maxSizeW, int maxSizeH)
+    {
+        var shapes = new List<Shape>(count);
+        int scaledW = Utilities.SmallNumberScaler(maxSizeW, XResolution);
+        int scaledH = Utilities.SmallNumberScaler(maxSizeH, YResolution);
+
+        for (int i = 0; i < count; i++)
+        {
+            int rotation = Rng.Next(90);
+            float x = Rng.Next(XResolution / 10, XResolution - XResolution / 10);
+            float y = Rng.Next(YResolution / 100, YResolution - YResolution / 10);
+            float w = scaledW > 0 ? Rng.Next(1, scaledW) : 1;
+            float h = scaledH > 0 ? Rng.Next(1, scaledH) : 1;
+            shapes.Add(new Shape(ShapeType.Rectangle, rotation, new SKRect(x, y, x + w, y + h)));
+        }
+        return shapes;
+    }
+
+    private List<Shape> MakeSquares(int count, int maxSizeW)
+    {
+        var shapes = new List<Shape>(count);
+        int scaled = Utilities.SmallNumberScaler(maxSizeW, XResolution);
+        int size = scaled > 0 ? Rng.Next(1, scaled) : 1;
+
+        for (int i = 0; i < count; i++)
+        {
+            int rotation = Rng.Next(90);
+            float x = Rng.Next(XResolution / 10, XResolution - XResolution / 10);
+            float y = Rng.Next(YResolution / 100, YResolution - YResolution / 10);
+            shapes.Add(new Shape(ShapeType.Square, rotation, new SKRect(x, y, x + size, y + size)));
+        }
+        return shapes;
+    }
+
+    private List<Shape> MakeEllipses(int count, int maxSizeW, int maxSizeH)
+    {
+        var shapes = new List<Shape>(count);
+        int scaledW = Utilities.SmallNumberScaler(maxSizeW, XResolution);
+        int scaledH = Utilities.SmallNumberScaler(maxSizeH, YResolution);
+
+        for (int i = 0; i < count; i++)
+        {
+            int rotation = Rng.Next(90);
+            float x = Rng.Next(XResolution / 10, XResolution - XResolution / 10);
+            float y = Rng.Next(YResolution / 100, YResolution - YResolution / 10);
+            float w = scaledW > 0 ? Rng.Next(1, scaledW) : 1;
+            float h = scaledH > 0 ? Rng.Next(1, scaledH) : 1;
+            shapes.Add(new Shape(ShapeType.Ellipse, rotation, new SKRect(x, y, x + w, y + h)));
+        }
+        return shapes;
+    }
+
+    private List<Shape> MakeCircles(int count, int maxSizeW)
+    {
+        var shapes = new List<Shape>(count);
+        int scaled = Utilities.SmallNumberScaler(maxSizeW + 1, XResolution);
+        int size = scaled > 0 ? Rng.Next(1, scaled) : 1;
+
+        for (int i = 0; i < count; i++)
+        {
+            int rotation = Rng.Next(90);
+            float x = Rng.Next(XResolution / 10, XResolution - XResolution / 10);
+            float y = Rng.Next(YResolution / 100, YResolution - YResolution / 10);
+            shapes.Add(new Shape(ShapeType.Circle, rotation, new SKRect(x, y, x + size, y + size)));
+        }
+        return shapes;
+    }
+
+    private List<Shape> MakePolygons(ShapeType type, int count, int maxSizeW, int maxSizeH, int sides)
+    {
+        var shapes = new List<Shape>(count);
+        int scaledW = Utilities.SmallNumberScaler(maxSizeW, XResolution);
+        int scaledH = Utilities.SmallNumberScaler(maxSizeH, YResolution);
+
+        for (int i = 0; i < count; i++)
+        {
+            int rotation = Rng.Next(90);
+            float cx = Rng.Next(XResolution / 10, XResolution - XResolution / 10);
+            float cy = Rng.Next(YResolution / 100, YResolution - YResolution / 10);
+            float rx = scaledW > 0 ? Rng.Next(1, scaledW) / 2f : 1;
+            float ry = scaledH > 0 ? Rng.Next(1, scaledH) / 2f : 1;
+
+            var points = GenerateRegularPolygon(cx, cy, rx, ry, sides);
+            shapes.Add(new Shape(type, rotation, points));
+        }
+        return shapes;
+    }
+
+    private List<Shape> MakeHourglasses(int count, int maxSizeW, int maxSizeH)
+    {
+        var shapes = new List<Shape>(count);
+        int scaledW = Utilities.SmallNumberScaler(maxSizeW, XResolution);
+        int scaledH = Utilities.SmallNumberScaler(maxSizeH, YResolution);
+
+        for (int i = 0; i < count; i++)
+        {
+            int rotation = Rng.Next(90);
+            float cx = Rng.Next(XResolution / 10, XResolution - XResolution / 10);
+            float cy = Rng.Next(YResolution / 100, YResolution - YResolution / 10);
+            float hw = (scaledW > 0 ? Rng.Next(1, scaledW) : 1) / 2f;
+            float hh = (scaledH > 0 ? Rng.Next(1, scaledH) : 1) / 2f;
+
+            // Hourglass: two triangles meeting at center, crossed
+            var points = new SKPoint[]
+            {
+                new(cx - hw, cy - hh),
+                new(cx + hw, cy - hh),
+                new(cx - hw, cy + hh),
+                new(cx + hw, cy + hh),
+            };
+            shapes.Add(new Shape(ShapeType.Hourglass, rotation, points));
+        }
+        return shapes;
+    }
+
+    internal static SKPoint[] GenerateRegularPolygon(float cx, float cy, float rx, float ry, int sides)
+    {
+        var points = new SKPoint[sides];
+        double angleStep = 2 * Math.PI / sides;
+        double startAngle = -Math.PI / 2; // start from top
+
+        for (int i = 0; i < sides; i++)
+        {
+            double angle = startAngle + i * angleStep;
+            points[i] = new SKPoint(
+                cx + (float)(rx * Math.Cos(angle)),
+                cy + (float)(ry * Math.Sin(angle)));
+        }
+        return points;
+    }
+
+    internal List<Shape>? GetShapesByType(ShapeType type) => type switch
+    {
+        ShapeType.Rectangle => Rectangles,
+        ShapeType.Square => Squares,
+        ShapeType.Ellipse => Ellipses,
+        ShapeType.Circle => Circles,
+        ShapeType.Triangle => Triangles,
+        ShapeType.Pentagon => Pentagons,
+        ShapeType.Hexagon => Hexagons,
+        ShapeType.Octagon => Octagons,
+        ShapeType.Hourglass => Hourglasses,
+        _ => null
+    };
 }
