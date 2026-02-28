@@ -1,0 +1,209 @@
+name: Build, Test & Release
+
+# ── Triggers ──────────────────────────────────────────────────────────────────
+#
+#  • PR targeting main          → test + build only (no publish)
+#  • Push to main               → test + build + rolling "latest" pre-release
+#                                 + NuGet snapshot pushed to GitHub Packages
+#  • Push a tag like v1.2.3     → test + build + proper versioned release
+#                                 + NuGet release pushed to GitHub Packages
+#
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+# Allow creating releases and pushing packages
+permissions:
+  contents: write
+  packages: write
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  AVALONIA_PROJECT: WallpaperMaker.Avalonia/WallpaperMaker.Avalonia.csproj
+  DOMAIN_PROJECT:   WallpaperMaker.Domain/WallpaperMaker.Domain.csproj
+
+# ──────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ── 1. Tests ─────────────────────────────────────────────────────────────────
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Run tests
+        run: dotnet test --configuration Release --verbosity normal
+
+  # ── 2. Multi-platform Build ───────────────────────────────────────────────────
+  build:
+    name: Build · ${{ matrix.rid }}
+    needs: test
+    strategy:
+      fail-fast: false   # let every target attempt even if one fails
+      matrix:
+        include:
+          # ── Linux ─────────────────────────────────────────────────────────
+          - { os: ubuntu-latest,  rid: linux-x64,         archive: tar }
+          - { os: ubuntu-latest,  rid: linux-arm64,        archive: tar }
+          - { os: ubuntu-latest,  rid: linux-musl-x64,     archive: tar }
+          - { os: ubuntu-latest,  rid: linux-musl-arm64,   archive: tar }
+
+          # ── Windows ───────────────────────────────────────────────────────
+          - { os: windows-latest, rid: win-x64,            archive: zip }
+          - { os: windows-latest, rid: win-x86,            archive: zip }
+          - { os: windows-latest, rid: win-arm64,          archive: zip }
+
+          # ── macOS ─────────────────────────────────────────────────────────
+          - { os: macos-latest,   rid: osx-x64,            archive: tar }
+          - { os: macos-latest,   rid: osx-arm64,          archive: tar }
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish — ${{ matrix.rid }}
+        run: >-
+          dotnet publish ${{ env.AVALONIA_PROJECT }}
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          --output publish/${{ matrix.rid }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WallpaperMaker-${{ matrix.rid }}
+          path: publish/${{ matrix.rid }}
+          retention-days: 30
+
+  # ── 3. GitHub Release ─────────────────────────────────────────────────────────
+  #
+  #  Downloads every build artifact, bundles each into a platform-appropriate
+  #  archive, then publishes a GitHub Release:
+  #    • tag push  → versioned release  (e.g. "Release v1.2.3")
+  #    • main push → rolling pre-release tagged "latest" (replaces previous)
+  #
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package release archives
+        run: |
+          mkdir -p release-assets
+          for dir in artifacts/WallpaperMaker-*/; do
+            name=$(basename "$dir")
+            rid="${name#WallpaperMaker-}"
+            if [[ "$rid" == win-* ]]; then
+              # Windows users expect .zip
+              (cd "$dir" && zip -r "../../release-assets/${name}.zip" .)
+            else
+              # Linux / macOS use .tar.gz
+              tar -czf "release-assets/${name}.tar.gz" -C "$dir" .
+            fi
+          done
+          echo "──── Release assets ────────────────────────────────"
+          ls -lh release-assets/
+
+      - name: Compute release metadata
+        id: meta
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            TITLE="Release ${TAG}"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            TAG="latest"
+            TITLE="Latest build · $(date -u '+%Y-%m-%d %H:%M UTC') · ${GITHUB_SHA::7}"
+            echo "prerelease=true"  >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=${TAG}"   >> "$GITHUB_OUTPUT"
+          echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
+
+      # Wipe the previous rolling "latest" release so we can recreate it cleanly.
+      # A versioned tag release is never deleted.
+      - name: Remove previous 'latest' release (if any)
+        if: steps.meta.outputs.tag == 'latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FLAGS="--generate-notes"
+          [[ "${{ steps.meta.outputs.prerelease }}" == "true" ]] && FLAGS="$FLAGS --prerelease"
+
+          gh release create "${{ steps.meta.outputs.tag }}" \
+            --title "${{ steps.meta.outputs.title }}" \
+            $FLAGS \
+            release-assets/*
+
+  # ── 4. NuGet Package → GitHub Packages ───────────────────────────────────────
+  #
+  #  Packs WallpaperMaker.Domain as a NuGet package and pushes it to the
+  #  repository's GitHub Packages NuGet feed.
+  #    • tag push  → version derived from the tag (v1.2.3 → 1.2.3)
+  #    • main push → pre-release snapshot version (0.0.1-preview.YYYYMMDDHHmmss)
+  #
+  package:
+    name: Publish NuGet Package
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Compute package version
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.1-preview.$(date -u +'%Y%m%d%H%M%S')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pack WallpaperMaker.Domain
+        run: |
+          dotnet pack ${{ env.DOMAIN_PROJECT }} \
+            --configuration Release \
+            -p:PackageVersion=${{ steps.ver.outputs.version }} \
+            --output packages
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push packages/*.nupkg \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
