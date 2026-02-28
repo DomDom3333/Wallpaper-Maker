@@ -3,10 +3,9 @@ name: Build, Test & Release
 # ── Triggers ──────────────────────────────────────────────────────────────────
 #
 #  • PR targeting main          → test + build only (no publish)
-#  • Push to main               → test + build + rolling "latest" pre-release
-#                                 + NuGet snapshot pushed to GitHub Packages
-#  • Push a tag like v1.2.3     → test + build + proper versioned release
-#                                 + NuGet release pushed to GitHub Packages
+#  • Push to main               → version bump (patch+1) → test + build
+#                                 → pre-release vX.Y.Z
+#  • Push a tag like v1.2.3     → test + build → versioned release
 #
 on:
   push:
@@ -27,6 +26,55 @@ env:
 
 # ──────────────────────────────────────────────────────────────────────────────
 jobs:
+
+  # ── 0. Compute Version ───────────────────────────────────────────────────────
+  #
+  #  Runs only on push events (not PRs).
+  #  • tag push  → uses the pushed tag verbatim (e.g. v1.2.3)
+  #  • main push → finds the latest v*.*.* tag in history and bumps the
+  #                patch segment by one (e.g. v1.2.3 → v1.2.4).
+  #                Falls back to v0.1.0 when no tag exists yet.
+  #
+  version:
+    name: Compute Version
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      tag:        ${{ steps.ver.outputs.tag }}
+      semver:     ${{ steps.ver.outputs.semver }}
+      title:      ${{ steps.ver.outputs.title }}
+      prerelease: ${{ steps.ver.outputs.prerelease }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so all tags are available
+
+      - name: Compute next version
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            SEMVER="${TAG#v}"
+            TITLE="Release ${TAG}"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            # Find the highest existing semver tag and bump the patch number
+            LATEST=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n1)
+            if [[ -z "$LATEST" ]]; then
+              SEMVER="0.1.0"
+            else
+              VER="${LATEST#v}"
+              IFS='.' read -r MAJ MIN PAT <<< "$VER"
+              SEMVER="${MAJ}.${MIN}.$((PAT + 1))"
+            fi
+            TAG="v${SEMVER}"
+            TITLE="Pre-release ${TAG} · $(date -u '+%Y-%m-%d %H:%M UTC') · ${GITHUB_SHA::7}"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=${TAG}"       >> "$GITHUB_OUTPUT"
+          echo "semver=${SEMVER}" >> "$GITHUB_OUTPUT"
+          echo "title=${TITLE}"   >> "$GITHUB_OUTPUT"
 
   # ── 1. Tests ─────────────────────────────────────────────────────────────────
   test:
@@ -94,13 +142,13 @@ jobs:
   # ── 3. GitHub Release ─────────────────────────────────────────────────────────
   #
   #  Downloads every build artifact, bundles each into a platform-appropriate
-  #  archive, then publishes a GitHub Release:
+  #  archive, then publishes a GitHub Release using the auto-computed version:
   #    • tag push  → versioned release  (e.g. "Release v1.2.3")
-  #    • main push → rolling pre-release tagged "latest" (replaces previous)
+  #    • main push → pre-release with bumped version (e.g. "Pre-release v1.2.4")
   #
   release:
     name: Create GitHub Release
-    needs: build
+    needs: [version, build]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
@@ -129,37 +177,14 @@ jobs:
           echo "──── Release assets ────────────────────────────────"
           ls -lh release-assets/
 
-      - name: Compute release metadata
-        id: meta
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            TAG="${GITHUB_REF#refs/tags/}"
-            TITLE="Release ${TAG}"
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
-          else
-            TAG="latest"
-            TITLE="Latest build · $(date -u '+%Y-%m-%d %H:%M UTC') · ${GITHUB_SHA::7}"
-            echo "prerelease=true"  >> "$GITHUB_OUTPUT"
-          fi
-          echo "tag=${TAG}"   >> "$GITHUB_OUTPUT"
-          echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
-
-      # Wipe the previous rolling "latest" release so we can recreate it cleanly.
-      # A versioned tag release is never deleted.
-      - name: Remove previous 'latest' release (if any)
-        if: steps.meta.outputs.tag == 'latest'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FLAGS="--generate-notes"
-          [[ "${{ steps.meta.outputs.prerelease }}" == "true" ]] && FLAGS="$FLAGS --prerelease"
+          [[ "${{ needs.version.outputs.prerelease }}" == "true" ]] && FLAGS="$FLAGS --prerelease"
 
-          gh release create "${{ steps.meta.outputs.tag }}" \
-            --title "${{ steps.meta.outputs.title }}" \
+          gh release create "${{ needs.version.outputs.tag }}" \
+            --title "${{ needs.version.outputs.title }}" \
             $FLAGS \
             release-assets/*
