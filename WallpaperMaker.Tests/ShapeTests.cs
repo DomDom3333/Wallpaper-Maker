@@ -47,4 +47,43 @@ public class ShapeTests
         Assert.Equal(100, shape.Bounds.Right);
         Assert.Equal(90, shape.Bounds.Bottom);
     }
+
+    [Fact]
+    public void PathShape_HasCorrectProperties()
+    {
+        var path = new SKPath();
+        path.MoveTo(0, 0);
+        path.CubicTo(50, 100, 100, 100, 150, 0);
+
+        var shape = new Shape(ShapeType.CurvedLine, 45, path);
+
+        Assert.Equal(ShapeType.CurvedLine, shape.Type);
+        Assert.Equal(45, shape.Rotation);
+        Assert.True(shape.IsPath);
+        Assert.False(shape.IsPolygon);
+        Assert.NotNull(shape.Path);
+    }
+
+    [Fact]
+    public void RoundedRectShape_HasCorrectProperties()
+    {
+        var bounds = new SKRect(10, 20, 110, 70);
+        var shape = new Shape(ShapeType.RoundedRectangle, 0, bounds, 10f);
+
+        Assert.Equal(ShapeType.RoundedRectangle, shape.Type);
+        Assert.True(shape.IsRoundedRect);
+        Assert.Equal(10f, shape.CornerRadius);
+        Assert.False(shape.IsPolygon);
+        Assert.False(shape.IsPath);
+    }
+
+    [Fact]
+    public void RegularRectShape_IsNotRoundedRect()
+    {
+        var bounds = new SKRect(10, 20, 110, 70);
+        var shape = new Shape(ShapeType.Rectangle, 0, bounds);
+
+        Assert.False(shape.IsRoundedRect);
+        Assert.Equal(0, shape.CornerRadius);
+    }
 }

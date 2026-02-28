@@ -1,114 +1,213 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using WallpaperMaker.Domain;
 
 namespace WallpaperMaker.Avalonia;
 
 public partial class SettingsWindow : Window
 {
+    public WallpaperConfig? ResultConfig { get; private set; }
     public string? ResultSeed { get; private set; }
+
+    private readonly List<ShapeRow> _rows = new();
     private bool _initialized;
 
-    public SettingsWindow() : this("330999996666001199999999999") { }
+    private class ShapeRow
+    {
+        public ShapeType Type { get; init; }
+        public Slider AmountSlider { get; init; } = null!;
+        public Slider SizeSlider { get; init; } = null!;
+        public CheckBox EnabledCheckBox { get; init; } = null!;
+    }
 
-    public SettingsWindow(string currentSeed)
+    public SettingsWindow() : this(WallpaperConfig.CreateDefault()) { }
+
+    public SettingsWindow(string currentSeed) : this(WallpaperConfig.FromSeed(currentSeed)) { }
+
+    public SettingsWindow(WallpaperConfig config)
     {
         InitializeComponent();
-        LoadFromSeed(currentSeed);
+        PopulateFillModes();
+        PopulateBackgroundModes();
+        BuildShapeRows(config);
+        LoadConfigSettings(config);
         _initialized = true;
         UpdateSeed();
     }
 
-    private void LoadFromSeed(string seed)
+    private void PopulateFillModes()
     {
-        if (seed.Length < 27) return;
-
-        LoadRow(seed[0], seed[9], CbRecs, SlAmountRecs, SlSizeRecs);
-        LoadRow(seed[1], seed[11], CbSquares, SlAmountSquares, SlSizeSquares);
-        LoadRow(seed[2], seed[13], CbEllipses, SlAmountEllipses, SlSizeEllipses);
-        LoadRow(seed[3], seed[15], CbCircles, SlAmountCircles, SlSizeCircles);
+        foreach (var mode in Enum.GetValues<FillMode>())
+            CbFillMode.Items.Add(FormatEnumName(mode.ToString()));
     }
 
-    private static void LoadRow(char amountChar, char sizeChar, CheckBox cb, Slider slAmount, Slider slSize)
+    private void PopulateBackgroundModes()
     {
-        int amount = amountChar - '0';
-        int size = sizeChar - '0';
-        bool enabled = amount > 0;
-
-        cb.IsChecked = enabled;
-        slAmount.Value = enabled ? Math.Clamp(amount, 1, 9) : 1;
-        slSize.Value = Math.Clamp(size, 1, 9);
-        slAmount.IsEnabled = enabled;
-        slSize.IsEnabled = enabled;
+        foreach (var mode in Enum.GetValues<BackgroundMode>())
+            CbBackgroundMode.Items.Add(FormatEnumName(mode.ToString()));
     }
 
-    private string BuildSeed()
+    private static string FormatEnumName(string name)
     {
-        static string amountFor(CheckBox cb, Slider sl) =>
-            cb.IsChecked == true ? ((int)sl.Value).ToString() : "0";
+        // Insert spaces before capitals: "LinearGradient" -> "Linear Gradient"
+        var chars = new List<char>();
+        for (int i = 0; i < name.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(name[i]) && char.IsLower(name[i - 1]))
+                chars.Add(' ');
+            chars.Add(name[i]);
+        }
+        return new string(chars.ToArray());
+    }
 
-        static string sizeFor(CheckBox cb, Slider sl) =>
-            cb.IsChecked == true ? $"{(int)sl.Value}{(int)sl.Value}" : "00";
+    private void BuildShapeRows(WallpaperConfig config)
+    {
+        foreach (var shapeConfig in config.Shapes)
+        {
+            var row = CreateShapeRow(shapeConfig);
+            _rows.Add(row);
+        }
+    }
 
-        string amounts = string.Concat(
-            amountFor(CbRecs, SlAmountRecs),
-            amountFor(CbSquares, SlAmountSquares),
-            amountFor(CbEllipses, SlAmountEllipses),
-            amountFor(CbCircles, SlAmountCircles));
+    private ShapeRow CreateShapeRow(ShapeConfig shapeConfig)
+    {
+        var amountSlider = new Slider
+        {
+            Minimum = 1, Maximum = 9,
+            Value = shapeConfig.Amount,
+            IsSnapToTickEnabled = true,
+            TickFrequency = 1,
+            IsEnabled = shapeConfig.Enabled,
+        };
+        amountSlider.ValueChanged += AnySlider_Changed;
 
-        string sizes = string.Concat(
-            sizeFor(CbRecs, SlSizeRecs),
-            sizeFor(CbSquares, SlSizeSquares),
-            sizeFor(CbEllipses, SlSizeEllipses),
-            sizeFor(CbCircles, SlSizeCircles));
+        var sizeSlider = new Slider
+        {
+            Minimum = 1, Maximum = 9,
+            Value = shapeConfig.SizeW,
+            IsSnapToTickEnabled = true,
+            TickFrequency = 1,
+            IsEnabled = shapeConfig.Enabled,
+        };
+        sizeSlider.ValueChanged += AnySlider_Changed;
 
-        // Pad to 27 chars: 4 amounts + 5 future amounts (9) + 4*2 sizes + 5*2 future sizes (9)
-        return $"{amounts}99999{sizes}9999999999";
+        var checkBox = new CheckBox
+        {
+            IsChecked = shapeConfig.Enabled,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+
+        var row = new ShapeRow
+        {
+            Type = shapeConfig.Type,
+            AmountSlider = amountSlider,
+            SizeSlider = sizeSlider,
+            EnabledCheckBox = checkBox,
+        };
+
+        checkBox.IsCheckedChanged += (_, _) =>
+        {
+            bool enabled = checkBox.IsChecked == true;
+            amountSlider.IsEnabled = enabled;
+            sizeSlider.IsEnabled = enabled;
+            if (_initialized) UpdateSeed();
+        };
+
+        var grid = new Grid
+        {
+            ColumnDefinitions = ColumnDefinitions.Parse("120,*,30,*,65"),
+        };
+
+        var label = new TextBlock
+        {
+            Text = FormatEnumName(shapeConfig.Type.ToString()),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        var sizeLabel = new TextBlock
+        {
+            Text = "Size",
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+
+        Grid.SetColumn(label, 0);
+        Grid.SetColumn(amountSlider, 1);
+        Grid.SetColumn(sizeLabel, 2);
+        Grid.SetColumn(sizeSlider, 3);
+        Grid.SetColumn(checkBox, 4);
+
+        grid.Children.Add(label);
+        grid.Children.Add(amountSlider);
+        grid.Children.Add(sizeLabel);
+        grid.Children.Add(sizeSlider);
+        grid.Children.Add(checkBox);
+
+        ShapeListPanel.Children.Add(grid);
+
+        return row;
+    }
+
+    private void LoadConfigSettings(WallpaperConfig config)
+    {
+        CbFillMode.SelectedIndex = (int)config.ShapeFill;
+        CbBackgroundMode.SelectedIndex = (int)config.Background;
+        SlMinOpacity.Value = config.MinOpacity * 100;
+        SlMaxOpacity.Value = config.MaxOpacity * 100;
+        CbStrokes.IsChecked = config.EnableStrokes;
+        SlStrokeWidth.Value = config.StrokeWidth;
+    }
+
+    public WallpaperConfig BuildConfig()
+    {
+        var config = new WallpaperConfig();
+
+        foreach (var row in _rows)
+        {
+            config.Shapes.Add(new ShapeConfig(
+                row.Type,
+                row.EnabledCheckBox.IsChecked == true,
+                (int)row.AmountSlider.Value,
+                (int)row.SizeSlider.Value,
+                (int)row.SizeSlider.Value));
+        }
+
+        config.ShapeFill = (FillMode)Math.Max(CbFillMode.SelectedIndex, 0);
+        config.Background = (BackgroundMode)Math.Max(CbBackgroundMode.SelectedIndex, 0);
+        config.MinOpacity = (float)SlMinOpacity.Value / 100f;
+        config.MaxOpacity = (float)SlMaxOpacity.Value / 100f;
+        config.EnableStrokes = CbStrokes.IsChecked == true;
+        config.StrokeWidth = (int)SlStrokeWidth.Value;
+
+        return config;
     }
 
     private void UpdateSeed()
     {
-        TbSeed.Text = BuildSeed();
+        var config = BuildConfig();
+        TbSeed.Text = config.ToSeed();
     }
 
-    private void UpdateRowEnabled(CheckBox cb, Slider slAmount, Slider slSize)
-    {
-        bool enabled = cb.IsChecked == true;
-        slAmount.IsEnabled = enabled;
-        slSize.IsEnabled = enabled;
-    }
-
-    private void AnySlider_Changed(object? sender, global::Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    private void AnySlider_Changed(object? sender, RangeBaseValueChangedEventArgs e)
     {
         if (_initialized) UpdateSeed();
     }
 
-    private void AnyCheckbox_Changed(object? sender, RoutedEventArgs e)
-    {
-        if (!_initialized) return;
-
-        if (sender == CbRecs) UpdateRowEnabled(CbRecs, SlAmountRecs, SlSizeRecs);
-        else if (sender == CbSquares) UpdateRowEnabled(CbSquares, SlAmountSquares, SlSizeSquares);
-        else if (sender == CbEllipses) UpdateRowEnabled(CbEllipses, SlAmountEllipses, SlSizeEllipses);
-        else if (sender == CbCircles) UpdateRowEnabled(CbCircles, SlAmountCircles, SlSizeCircles);
-
-        UpdateSeed();
-    }
-
     private void BtnDone_Click(object? sender, RoutedEventArgs e)
     {
-        if (CbRecs.IsChecked != true && CbSquares.IsChecked != true &&
-            CbEllipses.IsChecked != true && CbCircles.IsChecked != true)
-        {
-            // Could show an error dialog, but for simplicity just don't close
-            return;
-        }
+        bool anyEnabled = _rows.Any(r => r.EnabledCheckBox.IsChecked == true);
+        if (!anyEnabled) return;
 
-        ResultSeed = BuildSeed();
+        ResultConfig = BuildConfig();
+        ResultSeed = ResultConfig.ToSeed();
         Close();
     }
 
     private void BtnCancel_Click(object? sender, RoutedEventArgs e)
     {
+        ResultConfig = null;
         ResultSeed = null;
         Close();
     }

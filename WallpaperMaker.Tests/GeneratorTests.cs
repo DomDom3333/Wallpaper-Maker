@@ -39,7 +39,6 @@ public class GeneratorTests
         using var gen = new Generator(pallet, 100, 100, 0);
         using var bitmap = gen.Generate("999999999999999999999999999");
 
-        // Verify the bitmap has non-transparent pixels
         bool hasContent = false;
         for (int x = 0; x < bitmap.Width && !hasContent; x++)
         {
@@ -89,9 +88,109 @@ public class GeneratorTests
     {
         var pallet = CreateTestPallet();
         using var gen = new Generator(pallet, 200, 200, 0);
-        // Enable triangle (idx 4), pentagon (idx 5), hexagon (idx 6)
         using var bitmap = gen.Generate("000055500000000055555500000");
 
         Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithConfig_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+        Assert.Equal(200, bitmap.Height);
+    }
+
+    [Fact]
+    public void Generate_WithLinearGradientFill_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        config.ShapeFill = FillMode.LinearGradient;
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithRadialGradientFill_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        config.ShapeFill = FillMode.RadialGradient;
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithGradientBackground_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        config.Background = BackgroundMode.LinearGradient;
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithRadialGradientBackground_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        config.Background = BackgroundMode.RadialGradient;
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithOpacityRange_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        config.MinOpacity = 0.3f;
+        config.MaxOpacity = 0.8f;
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithStrokesEnabled_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = WallpaperConfig.CreateDefault();
+        config.EnableStrokes = true;
+        config.StrokeWidth = 3;
+        using var gen = new Generator(pallet, 200, 200, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(200, bitmap.Width);
+    }
+
+    [Fact]
+    public void Generate_WithAllNewShapes_ProducesImage()
+    {
+        var pallet = CreateTestPallet();
+        var config = new WallpaperConfig();
+        foreach (ShapeType type in Enum.GetValues<ShapeType>())
+            config.Shapes.Add(new ShapeConfig(type, enabled: true, amount: 2, sizeW: 5, sizeH: 5));
+
+        using var gen = new Generator(pallet, 300, 300, 0, config);
+        using var bitmap = gen.Generate(config);
+
+        Assert.Equal(300, bitmap.Width);
+        Assert.Equal(300, bitmap.Height);
     }
 }

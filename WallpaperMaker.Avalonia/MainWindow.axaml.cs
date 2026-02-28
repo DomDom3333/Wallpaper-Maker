@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using SkiaSharp;
@@ -7,12 +8,23 @@ using WallpaperMaker.Domain;
 
 namespace WallpaperMaker.Avalonia;
 
+public class PalletItem
+{
+    public Pallet Pallet { get; }
+    public string Name => Pallet.Name;
+    public List<IBrush> ColorBrushes => Pallet.Colors
+        .Select(c => (IBrush)new SolidColorBrush(new Color(255, c.Red, c.Green, c.Blue)))
+        .ToList();
+
+    public PalletItem(Pallet pallet) => Pallet = pallet;
+}
+
 public partial class MainWindow : Window
 {
     private List<Pallet> _pallets = new();
     private Pallet? _activePalette;
     private SKBitmap? _lastBitmap;
-    private string _seed = "330999996666001199999999999";
+    private WallpaperConfig _config = WallpaperConfig.CreateDefault();
 
     private const string DefaultPalletJson = """
     {
@@ -45,6 +57,11 @@ public partial class MainWindow : Window
     }
     """;
 
+    private readonly string _userPalletsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "WallpaperMaker",
+        "UserPallets.json");
+
     public MainWindow()
     {
         InitializeComponent();
@@ -53,7 +70,22 @@ public partial class MainWindow : Window
 
     private void InitFormElements()
     {
-        _pallets = Utilities.UnpackUserColorPallets(DefaultPalletJson);
+        if (File.Exists(_userPalletsPath))
+        {
+            try
+            {
+                string json = File.ReadAllText(_userPalletsPath);
+                _pallets = Utilities.UnpackUserColorPallets(json);
+            }
+            catch
+            {
+                _pallets = Utilities.UnpackUserColorPallets(DefaultPalletJson);
+            }
+        }
+        else
+        {
+            _pallets = Utilities.UnpackUserColorPallets(DefaultPalletJson);
+        }
 
         var externalPath = Path.Combine("Resources", "ColorPallets.json");
         if (File.Exists(externalPath))
@@ -66,11 +98,9 @@ public partial class MainWindow : Window
 
     private void DetectResolution()
     {
-        // Prefer the screen the window is currently on; fall back to primary
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
         if (screen != null)
         {
-            // Screen.Bounds is in logical (DIP) pixels on some platforms; multiply
             TbWidth.Text  = screen.Bounds.Width.ToString();
             TbHeight.Text = screen.Bounds.Height.ToString();
         }
@@ -85,7 +115,7 @@ public partial class MainWindow : Window
     {
         CbPalette.Items.Clear();
         foreach (var p in _pallets)
-            CbPalette.Items.Add(p.Name);
+            CbPalette.Items.Add(new PalletItem(p));
 
         if (_pallets.Count > 0)
         {
@@ -143,6 +173,8 @@ public partial class MainWindow : Window
         if (ms < 0) ms = 0;
 
         BtnGenerate.IsEnabled = false;
+        PbProgress.IsVisible = true;
+        PbProgress.IsIndeterminate = true;
         TxtStatus.Text = $"Generating {w}x{h} wallpaper (supersampling: {ms}x)...";
 
         try
@@ -150,8 +182,8 @@ public partial class MainWindow : Window
             _lastBitmap?.Dispose();
             _lastBitmap = await Task.Run(() =>
             {
-                using var gen = new Generator(_activePalette, w, h, ms);
-                return gen.Generate(_seed);
+                using var gen = new Generator(_activePalette, w, h, ms, _config);
+                return gen.Generate(_config);
             });
 
             ImgPreview.Source = SKBitmapToAvaloniaBitmap(_lastBitmap);
@@ -164,16 +196,18 @@ public partial class MainWindow : Window
         finally
         {
             BtnGenerate.IsEnabled = true;
+            PbProgress.IsVisible = false;
+            PbProgress.IsIndeterminate = false;
         }
     }
 
     private void BtnSettings_Click(object? sender, RoutedEventArgs e)
     {
-        var settingsWindow = new SettingsWindow(_seed);
+        var settingsWindow = new SettingsWindow(_config);
         settingsWindow.ShowDialog(this).ContinueWith(t =>
         {
-            if (settingsWindow.ResultSeed != null)
-                _seed = settingsWindow.ResultSeed;
+            if (settingsWindow.ResultConfig != null)
+                _config = settingsWindow.ResultConfig;
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
@@ -228,8 +262,26 @@ public partial class MainWindow : Window
         colorWindow.ShowDialog(this).ContinueWith(t =>
         {
             _pallets = colorWindow.ResultPallets;
+            SavePallets();
             RefreshPaletteComboBox();
         }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    private void SavePallets()
+    {
+        try
+        {
+            string? dir = Path.GetDirectoryName(_userPalletsPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            string json = Utilities.PackUpUserColorPallets(_pallets);
+            File.WriteAllText(_userPalletsPath, json);
+        }
+        catch (Exception ex)
+        {
+            TxtStatus.Text = $"Error saving pallets: {ex.Message}";
+        }
     }
 
     private void BtnAutoDetect_Click(object? sender, RoutedEventArgs e)
@@ -240,9 +292,8 @@ public partial class MainWindow : Window
 
     private void CbPalette_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        int idx = CbPalette.SelectedIndex;
-        if (idx >= 0 && idx < _pallets.Count)
-            _activePalette = _pallets[idx];
+        if (CbPalette.SelectedItem is PalletItem item)
+            _activePalette = item.Pallet;
     }
 
     private static Bitmap SKBitmapToAvaloniaBitmap(SKBitmap skBitmap)

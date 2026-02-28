@@ -23,16 +23,13 @@ public class ElementAgregatorTests
     [Fact]
     public void MakeAll_GeneratesShapesForAllEnabledTypes()
     {
-        // Seed: 330999996666001199999999999
-        // Amounts: 3,3,0,9,9,9,9,9,6
         var agg = new ElementAgregator(DefaultSeed, 1920, 1080);
         agg.MakeAll();
 
-        // Shape types with amount > 0 should have shapes
-        Assert.NotNull(agg.GetShapesByType(ShapeType.Rectangle)); // amount=3
-        Assert.NotNull(agg.GetShapesByType(ShapeType.Square));    // amount=3
-        Assert.Null(agg.GetShapesByType(ShapeType.Ellipse));      // amount=0
-        Assert.NotNull(agg.GetShapesByType(ShapeType.Circle));    // amount=9
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Rectangle));
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Square));
+        Assert.Null(agg.GetShapesByType(ShapeType.Ellipse));
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Circle));
     }
 
     [Fact]
@@ -51,13 +48,11 @@ public class ElementAgregatorTests
     [Fact]
     public void MakeAll_GeneratesCorrectShapeCount()
     {
-        // Seed with all 1s for amounts = minimum count
         var agg = new ElementAgregator("111111111111111111111111111", 1920, 1080);
         agg.MakeAll();
 
         var rects = agg.GetShapesByType(ShapeType.Rectangle);
         Assert.NotNull(rects);
-        // SmallNumberScaler(1, 50) = (50/9)*1 = 5, so should have 5 shapes
         Assert.Equal(5, rects!.Count);
     }
 
@@ -77,7 +72,6 @@ public class ElementAgregatorTests
     [Fact]
     public void MakeAll_CreatesPolygonShapes()
     {
-        // All shape types enabled with amount=5
         var agg = new ElementAgregator("555555555555555555555555555", 1920, 1080);
         agg.MakeAll();
 
@@ -87,9 +81,109 @@ public class ElementAgregatorTests
         Assert.NotNull(agg.GetShapesByType(ShapeType.Octagon));
         Assert.NotNull(agg.GetShapesByType(ShapeType.Hourglass));
 
-        // Verify polygon shapes are actually polygons
         var triangles = agg.GetShapesByType(ShapeType.Triangle)!;
         Assert.All(triangles, t => Assert.True(t.IsPolygon));
         Assert.All(triangles, t => Assert.Equal(3, t.Polygon!.Length));
+    }
+
+    [Fact]
+    public void MakeFromConfig_GeneratesNewShapeTypes()
+    {
+        var config = new WallpaperConfig();
+        config.Shapes.Add(new ShapeConfig(ShapeType.Star, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+        config.Shapes.Add(new ShapeConfig(ShapeType.Diamond, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+        config.Shapes.Add(new ShapeConfig(ShapeType.Cross, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+        config.Shapes.Add(new ShapeConfig(ShapeType.Arrow, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+
+        var agg = new ElementAgregator(config, 1920, 1080);
+        agg.MakeFromConfig(config.Shapes);
+
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Star));
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Diamond));
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Cross));
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Arrow));
+
+        // Stars should be polygon-based
+        var stars = agg.GetShapesByType(ShapeType.Star)!;
+        Assert.All(stars, s => Assert.True(s.IsPolygon));
+    }
+
+    [Fact]
+    public void MakeFromConfig_GeneratesRoundedRectangles()
+    {
+        var config = new WallpaperConfig();
+        config.Shapes.Add(new ShapeConfig(ShapeType.RoundedRectangle, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+
+        var agg = new ElementAgregator(config, 1920, 1080);
+        agg.MakeFromConfig(config.Shapes);
+
+        var shapes = agg.GetShapesByType(ShapeType.RoundedRectangle);
+        Assert.NotNull(shapes);
+        Assert.All(shapes!, s => Assert.True(s.IsRoundedRect));
+        Assert.All(shapes!, s => Assert.True(s.CornerRadius > 0));
+    }
+
+    [Fact]
+    public void MakeFromConfig_GeneratesPathBasedShapes()
+    {
+        var config = new WallpaperConfig();
+        config.Shapes.Add(new ShapeConfig(ShapeType.CurvedLine, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+        config.Shapes.Add(new ShapeConfig(ShapeType.Blob, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+        config.Shapes.Add(new ShapeConfig(ShapeType.Spiral, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+
+        var agg = new ElementAgregator(config, 1920, 1080);
+        agg.MakeFromConfig(config.Shapes);
+
+        var curves = agg.GetShapesByType(ShapeType.CurvedLine);
+        var blobs = agg.GetShapesByType(ShapeType.Blob);
+        var spirals = agg.GetShapesByType(ShapeType.Spiral);
+
+        Assert.NotNull(curves);
+        Assert.NotNull(blobs);
+        Assert.NotNull(spirals);
+
+        Assert.All(curves!, s => Assert.True(s.IsPath));
+        Assert.All(blobs!, s => Assert.True(s.IsPath));
+        Assert.All(spirals!, s => Assert.True(s.IsPath));
+    }
+
+    [Fact]
+    public void MakeFromConfig_DisabledShapesAreSkipped()
+    {
+        var config = new WallpaperConfig();
+        config.Shapes.Add(new ShapeConfig(ShapeType.Star, enabled: false, amount: 5, sizeW: 5, sizeH: 5));
+        config.Shapes.Add(new ShapeConfig(ShapeType.Circle, enabled: true, amount: 3, sizeW: 5, sizeH: 5));
+
+        var agg = new ElementAgregator(config, 1920, 1080);
+        agg.MakeFromConfig(config.Shapes);
+
+        Assert.Null(agg.GetShapesByType(ShapeType.Star));
+        Assert.NotNull(agg.GetShapesByType(ShapeType.Circle));
+    }
+
+    [Fact]
+    public void GenerateStarPolygon_CreatesCorrectPointCount()
+    {
+        var star5 = ElementAgregator.GenerateStarPolygon(100, 100, 50, 50, 20, 20, 5);
+        Assert.Equal(10, star5.Length); // 5 outer + 5 inner
+
+        var star8 = ElementAgregator.GenerateStarPolygon(100, 100, 50, 50, 20, 20, 8);
+        Assert.Equal(16, star8.Length);
+    }
+
+    [Fact]
+    public void GenerateBlobPath_CreatesClosedPath()
+    {
+        var path = ElementAgregator.GenerateBlobPath(100, 100, 50, 50, 6);
+        Assert.NotNull(path);
+        Assert.False(path.IsEmpty);
+    }
+
+    [Fact]
+    public void GenerateSpiralPath_CreatesNonEmptyPath()
+    {
+        var path = ElementAgregator.GenerateSpiralPath(100, 100, 50, 3);
+        Assert.NotNull(path);
+        Assert.False(path.IsEmpty);
     }
 }
