@@ -1,73 +1,200 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="WallpaperMaker.Avalonia.ColorPickerWindow"
-        Title="Color Palettes"
-        Width="660" Height="520"
-        MinWidth="580" MinHeight="420"
-        CanResize="True"
-        WindowStartupLocation="CenterOwner">
+<Window
+    CanResize="True"
+    Height="520"
+    MinHeight="420"
+    MinWidth="580"
+    Title="Color Palettes"
+    Width="660"
+    WindowStartupLocation="CenterOwner"
+    x:Class="WallpaperMaker.Avalonia.ColorPickerWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid ColumnDefinitions="*,*,Auto" RowDefinitions="Auto,*,Auto,Auto" Margin="12">
-        <!-- Column headers -->
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Palettes" FontWeight="SemiBold" Margin="0,0,0,4" />
-        <TextBlock Grid.Row="0" Grid.Column="1" Text="Colors in Palette" FontWeight="SemiBold" Margin="8,0,0,4" />
+    <Grid
+        ColumnDefinitions="*,*,Auto"
+        Margin="12"
+        RowDefinitions="Auto,*,Auto,Auto">
+        <!--  Column headers  -->
+        <TextBlock
+            FontWeight="SemiBold"
+            Grid.Column="0"
+            Grid.Row="0"
+            Margin="0,0,0,4"
+            Text="Palettes" />
+        <TextBlock
+            FontWeight="SemiBold"
+            Grid.Column="1"
+            Grid.Row="0"
+            Margin="8,0,0,4"
+            Text="Colors in Palette" />
 
-        <!-- Palette list -->
-        <ListBox Grid.Row="1" Grid.Column="0" x:Name="LbPalettes" SelectionChanged="LbPalettes_SelectionChanged" />
+        <!--  Palette list  -->
+        <ListBox
+            Grid.Column="0"
+            Grid.Row="1"
+            SelectionChanged="LbPalettes_SelectionChanged"
+            x:Name="LbPalettes">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Spacing="2">
+                        <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                        <ItemsControl ItemsSource="{Binding ColorBrushes}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        Background="{Binding}"
+                                        Height="12"
+                                        Width="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
-        <!-- Colors list -->
-        <ListBox Grid.Row="1" Grid.Column="1" x:Name="LbColors" Margin="8,0,0,0" SelectionChanged="LbColors_SelectionChanged">
+        <!--  Colors list  -->
+        <ListBox
+            Grid.Column="1"
+            Grid.Row="1"
+            Margin="8,0,0,0"
+            SelectionChanged="LbColors_SelectionChanged"
+            x:Name="LbColors">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Border Width="24" Height="24" CornerRadius="3"
-                                Background="{Binding Brush}" BorderBrush="Gray" BorderThickness="1" />
+                        <Border
+                            Background="{Binding Brush}"
+                            BorderBrush="Gray"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Height="24"
+                            Width="24" />
                         <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <!-- Preview + actions -->
-        <StackPanel Grid.Row="1" Grid.Column="2" Spacing="6" Margin="8,0,0,0" Width="150">
+        <!--  Preview + actions  -->
+        <StackPanel
+            Grid.Column="2"
+            Grid.Row="1"
+            Margin="8,0,0,0"
+            Spacing="6"
+            Width="150">
             <TextBlock Text="Preview:" />
-            <Border x:Name="BdrPreview" Width="80" Height="80" CornerRadius="4"
-                    BorderBrush="Gray" BorderThickness="1" />
+            <Border
+                BorderBrush="Gray"
+                BorderThickness="1"
+                CornerRadius="4"
+                Height="80"
+                Width="80"
+                x:Name="BdrPreview" />
 
             <Separator Margin="0,4" />
             <TextBlock Text="Palette name:" />
-            <TextBox x:Name="TbPaletteName" Text="New Palette" />
-            <Button Content="New Palette" Click="BtnNewPalette_Click" HorizontalAlignment="Stretch" />
-            <Button Content="Rename" Click="BtnRenamePalette_Click" HorizontalAlignment="Stretch" />
-            <Button Content="Delete Palette" Click="BtnDeletePalette_Click" HorizontalAlignment="Stretch" />
+            <TextBox Text="New Palette" x:Name="TbPaletteName" />
+            <Button
+                Click="BtnNewPalette_Click"
+                Content="New Palette"
+                HorizontalAlignment="Stretch" />
+            <Button
+                Click="BtnRenamePalette_Click"
+                Content="Rename"
+                HorizontalAlignment="Stretch" />
+            <Button
+                Click="BtnDeletePalette_Click"
+                Content="Delete Palette"
+                HorizontalAlignment="Stretch" />
 
             <Separator Margin="0,4" />
-            <Button Content="Add Color" Click="BtnAddColor_Click" HorizontalAlignment="Stretch" />
-            <Button Content="Delete Color" Click="BtnDeleteColor_Click" HorizontalAlignment="Stretch" />
-        </StackPanel>
-
-        <!-- Color input area -->
-        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
-            <TextBlock Text="R:" VerticalAlignment="Center" />
-            <TextBox x:Name="TbR" Width="50" Text="128" />
-            <TextBlock Text="G:" VerticalAlignment="Center" />
-            <TextBox x:Name="TbG" Width="50" Text="128" />
-            <TextBlock Text="B:" VerticalAlignment="Center" />
-            <TextBox x:Name="TbB" Width="50" Text="128" />
-        </StackPanel>
-
-        <!-- Color Theory generators -->
-        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,8,0,0">
-            <TextBlock Text="Generate:" VerticalAlignment="Center" Margin="0,0,4,0" />
-            <Button Content="Complementary" Click="BtnGenComplementary_Click" FontSize="11" Padding="6,3" />
-            <Button Content="Analogous" Click="BtnGenAnalogous_Click" FontSize="11" Padding="6,3" />
-            <Button Content="Triadic" Click="BtnGenTriadic_Click" FontSize="11" Padding="6,3" />
-            <Button Content="Monochrome" Click="BtnGenMonochromatic_Click" FontSize="11" Padding="6,3" />
-            <Button Content="Random" Click="BtnGenRandom_Click" FontSize="11" Padding="6,3" />
-        </StackPanel>
-
-        <!-- Done button -->
-        <Button Grid.Row="3" Grid.Column="2" Content="Done" Click="BtnDone_Click" Margin="8,8,0,0"
+            <Button
+                Click="BtnAddColor_Click"
+                Content="Add Color"
                 HorizontalAlignment="Stretch" />
+            <Button
+                Click="BtnDeleteColor_Click"
+                Content="Delete Color"
+                HorizontalAlignment="Stretch" />
+        </StackPanel>
+
+        <!--  Color input area  -->
+        <StackPanel
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Grid.Row="2"
+            Margin="0,8,0,0"
+            Orientation="Horizontal"
+            Spacing="6">
+            <TextBlock Text="R:" VerticalAlignment="Center" />
+            <TextBox
+                Text="128"
+                Width="50"
+                x:Name="TbR" />
+            <TextBlock Text="G:" VerticalAlignment="Center" />
+            <TextBox
+                Text="128"
+                Width="50"
+                x:Name="TbG" />
+            <TextBlock Text="B:" VerticalAlignment="Center" />
+            <TextBox
+                Text="128"
+                Width="50"
+                x:Name="TbB" />
+        </StackPanel>
+
+        <!--  Color Theory generators  -->
+        <StackPanel
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Grid.Row="3"
+            Margin="0,8,0,0"
+            Orientation="Horizontal"
+            Spacing="4">
+            <TextBlock
+                Margin="0,0,4,0"
+                Text="Generate:"
+                VerticalAlignment="Center" />
+            <Button
+                Click="BtnGenComplementary_Click"
+                Content="Complementary"
+                FontSize="11"
+                Padding="6,3" />
+            <Button
+                Click="BtnGenAnalogous_Click"
+                Content="Analogous"
+                FontSize="11"
+                Padding="6,3" />
+            <Button
+                Click="BtnGenTriadic_Click"
+                Content="Triadic"
+                FontSize="11"
+                Padding="6,3" />
+            <Button
+                Click="BtnGenMonochromatic_Click"
+                Content="Monochrome"
+                FontSize="11"
+                Padding="6,3" />
+            <Button
+                Click="BtnGenRandom_Click"
+                Content="Random"
+                FontSize="11"
+                Padding="6,3" />
+        </StackPanel>
+
+        <!--  Done button  -->
+        <Button
+            Click="BtnDone_Click"
+            Content="Done"
+            Grid.Column="2"
+            Grid.Row="3"
+            HorizontalAlignment="Stretch"
+            Margin="8,8,0,0" />
     </Grid>
 </Window>

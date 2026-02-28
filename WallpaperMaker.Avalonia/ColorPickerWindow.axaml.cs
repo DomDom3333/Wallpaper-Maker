@@ -39,7 +39,7 @@ public partial class ColorPickerWindow : Window
     {
         LbPalettes.Items.Clear();
         foreach (var p in ResultPallets)
-            LbPalettes.Items.Add(p.Name);
+            LbPalettes.Items.Add(new PalletItem(p));
     }
 
     private void RefreshColorList()
@@ -53,10 +53,9 @@ public partial class ColorPickerWindow : Window
 
     private void LbPalettes_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        int idx = LbPalettes.SelectedIndex;
-        if (idx >= 0 && idx < ResultPallets.Count)
+        if (LbPalettes.SelectedItem is PalletItem item)
         {
-            _selectedPallet = ResultPallets[idx];
+            _selectedPallet = item.Pallet;
             RefreshColorList();
         }
     }
@@ -74,13 +73,17 @@ public partial class ColorPickerWindow : Window
 
     private void BtnNewPalette_Click(object? sender, RoutedEventArgs e)
     {
-        string name = TbPaletteName.Text?.Trim() ?? "New Palette";
-        if (string.IsNullOrEmpty(name)) return;
+        string? name = TbPaletteName.Text?.Trim();
+        if (string.IsNullOrEmpty(name))
+            name = NameGenerator.GenerateName(ResultPallets.Select(p => p.Name));
 
         if (ResultPallets.Any(p => p.Name == name))
         {
-            TbPaletteName.Text = name + " (2)";
-            return;
+            string baseName = name;
+            int counter = 2;
+            while (ResultPallets.Any(p => p.Name == $"{baseName} ({counter})"))
+                counter++;
+            name = $"{baseName} ({counter})";
         }
 
         ResultPallets.Add(new Pallet(name, Array.Empty<string>()));
@@ -147,15 +150,7 @@ public partial class ColorPickerWindow : Window
 
     private void AddGeneratedPalette(ColorHarmony harmony)
     {
-        string baseName = harmony.ToString();
-        string name = baseName;
-        int counter = 1;
-        while (ResultPallets.Any(p => p.Name == name))
-        {
-            counter++;
-            name = $"{baseName} {counter}";
-        }
-
+        string name = NameGenerator.GenerateName(ResultPallets.Select(p => p.Name));
         var pallet = ColorTheory.GeneratePalette(harmony, name);
         ResultPallets.Add(pallet);
         RefreshPaletteList();
@@ -176,14 +171,7 @@ public partial class ColorPickerWindow : Window
 
     private void BtnGenRandom_Click(object? sender, RoutedEventArgs e)
     {
-        string name = "Random";
-        int counter = 1;
-        while (ResultPallets.Any(p => p.Name == name))
-        {
-            counter++;
-            name = $"Random {counter}";
-        }
-
+        string name = NameGenerator.GenerateName(ResultPallets.Select(p => p.Name));
         var pallet = ColorTheory.GenerateRandomPalette(name);
         ResultPallets.Add(pallet);
         RefreshPaletteList();
