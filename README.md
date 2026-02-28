@@ -1,48 +1,94 @@
 # Wallpaper-Maker
-This is a WinForms based Wallpaper Generator that make Minimalist/Modern Art style wallpapers.
+A cross-platform Minimalist/Modern Art wallpaper generator built with **Avalonia UI** and **SkiaSharp**.
 
-# Samples
-https://imgur.com/gallery/y0OOdmI
+---
 
-# Getting started:
-- Open the exe and punch in your resolution (in case it didnt autodetect)
-- Open the settings tab to customize what kind of shapes you want to have
-- Open the colors tab and make yourself a Color Pallet to use
-- Select your color pallet on the main screen and hit 'Generate'
-- There you go! Now save the image using the Save button.
+# Getting Started
 
-# Features:
-- Multisampling for even higher Resolutions!
-- Flexible Color Pallet options that allow for unlimited Pallets and Colors per Pallet
-- Shapes get drawn in random order, meaning even with the same settings, it will never look the same due to layering
-- Import lots of Pallets at once by creating a /Resources/ColorPallets.json file and using the following format
-```
-{
-  "Pallets": [
-    {
-      "Pallet": {
-        "Name": "your pallet name",     /* change this to something unique*/
-        "Colors":[                      /*add your colors here*/
-          "229,244,227",
-          "93,169,233",
-          "0,63,145",
-          "255,255,255",
-          "109,50,109"
-        ]
-      }
-    }
-  ]
-}
-```
-# Planned Features
-- Seed sharing! Type in a manual seed to copy settings easily.
-- Element Exporting! Save the Layout of the wallpaper elements to recreate the same layout with different colors.
-- More Shapes! So many more shapes!
+1. Launch the application — your screen resolution is detected automatically.
+2. Adjust the width/height fields if needed (or hit **Auto-Detect**).
+3. Open **Settings** to choose shapes, fill styles, background, opacity, and strokes.
+4. Open **Colors** to create or generate a color palette.
+5. Select a palette from the dropdown and choose a supersampling level.
+6. Hit **Generate** — a preview appears when the wallpaper is ready.
+7. Click **Save** to export the image.
+
+---
+
+# Features
+
+### Shapes — 17 types
+| Original (seed-compatible) | New |
+|---|---|
+| Rectangle | Star |
+| Square | Diamond |
+| Ellipse | Cross |
+| Circle | Arrow |
+| Triangle | Rounded Rectangle |
+| Pentagon | Curved Line |
+| Hexagon | Blob |
+| Octagon | Spiral |
+| Hourglass | |
+
+Each shape has independent **Amount** (1–9) and **Size** (1–9) sliders and can be toggled on/off individually.
+
+### Rendering
+- Powered by **SkiaSharp** for fast, high-quality rendering.
+- **Supersampling / multisampling** — render at a higher internal resolution then downsample for crisp results at any target resolution.
+- Shapes are drawn in a **randomised order** every generation, so even identical settings produce unique results due to layering.
+- Full **anti-aliasing** on all shape types.
+
+### Fill Modes (per shape)
+- **Solid** — flat colour from the active palette.
+- **Linear Gradient** — two palette colours blended at a random angle.
+- **Radial Gradient** — two palette colours blended from the centre outward.
+
+### Background Modes
+- **Solid**
+- **Linear Gradient**
+- **Radial Gradient**
+
+### Shape Appearance
+- **Opacity** — independent minimum and maximum opacity sliders; each shape gets a random opacity in that range.
+- **Strokes** — optional outline on every shape with a configurable stroke width.
+
+### Color Palettes
+- Unlimited pallets, unlimited colors per pallet.
+- Pallets are **persisted automatically** to `%AppData%\WallpaperMaker\UserPallets.json` — no manual file management needed.
+- **Color Theory palette generator** — generate harmonically correct palettes in one click:
+  - Complementary
+  - Analogous
+  - Triadic
+  - Split-Complementary
+  - Tetradic
+  - Monochromatic
+  - Random (picks a harmony automatically)
+- Generated pallets receive creative auto-generated names (e.g. *"Vibrant Ocean"*, *"Dusty Nebula"*).
+- Create, rename, delete palettes and add/remove individual colours via the built-in **RGB colour picker**.
+
+### Seed Sharing
+Settings are encoded into a **27-character seed** (visible live in the Settings window). Share or paste a seed to reproduce the exact same shape configuration. Backward-compatible with seeds from the original WinForms release.
+
+### Saving
+Export the wallpaper in any of the following formats:
+- PNG *(default)*
+- JPEG
+- BMP
+- WebP
 
 
+---
 
+# Project Structure
 
+| Project | Description |
+|---|---|
+| `WallpaperMaker.Domain` | Core logic — shapes, generator, colour theory, palette handling |
+| `WallpaperMaker.Avalonia` | Cross-platform UI (Avalonia) — primary front-end |
+| `WallpaperMaker.WinForm` | Legacy WinForms UI (Windows only) |
+| `WallpaperMaker.Tests` | Unit tests (xUnit) |
 
+---
 
 #### Thanks
-If you find any bugs or have ideas for improovements, feel free to create an issiue. help ALWAYS wanted!
+If you find any bugs or have ideas for improvements, feel free to create an issue — help is always welcome!
